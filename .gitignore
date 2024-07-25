@@ -1,2 +1,9 @@
 .flaskenv
 app.db
+__pycache__
+app/__pycache__
+app/auth/__pycache__
+app/auth/forms/__pycache__
+app/auth/routes/__pycache__
+
+
