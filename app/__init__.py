@@ -14,5 +14,5 @@ login = LoginManager(app)
 from app import models
 
 # Here all the bluprint get added to the main application
-from app.auth import bp as auth_bp
-app.register_blueprint(auth_bp, url_prefix='/auth')
+from app.auth import auth
+app.register_blueprint(auth, url_prefix='/auth')
