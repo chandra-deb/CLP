@@ -16,7 +16,7 @@ class User(UserMixin, db.Model):
     __tablename__ = 'user'
 
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
-    username: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, unique=True)
+    username: so.Mapped[str] = so.mapped_column(sa.String(32), index=True, unique=True)
     email: so.Mapped[str] = so.mapped_column(sa.String(120), index=True, unique=True)
     # New Added
     created_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime, default=db.func.current_timestamp())
