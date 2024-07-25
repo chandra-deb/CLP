@@ -6,6 +6,8 @@ from app import db
 from app.auth.forms.signup_form import SignUpForm
 
 
+
+
 @auth.route('/signup', methods=['GET', 'POST'])
 def signup():
     if current_user.is_authenticated:
@@ -18,5 +20,5 @@ def signup():
         db.session.add(user)
         db.session.commit()
         flash('Congratulations, you are now a registered user!')
-        return redirect(url_for('auth.signup'))
+        return redirect(url_for('auth.signin'))
     return render_template('signup.html', title='Sign Up', form=form)
