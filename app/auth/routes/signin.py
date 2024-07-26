@@ -13,7 +13,7 @@ from app.models import User
 @auth.route('/signin', methods=['GET', 'POST'])
 def signin():
     if current_user.is_authenticated:
-        return redirect(url_for('index'))
+        return redirect(url_for('account.dashboard'))
     form = SignInForm()
     if form.validate_on_submit():
         user = db.session.scalar(
