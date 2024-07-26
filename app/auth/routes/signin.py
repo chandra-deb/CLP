@@ -22,5 +22,5 @@ def signin():
             flash('Invalid username or password')
             return redirect(url_for('signin'))
         login_user(user, remember=form.remember_me.data)
-        return redirect(url_for('account.profile'))
+        return redirect(url_for('account.dashboard'))
     return render_template('signin.html', title='Sign In', form=form)
