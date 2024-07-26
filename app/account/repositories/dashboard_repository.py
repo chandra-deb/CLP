@@ -1,6 +1,16 @@
 from app import db
 from app.models import UserCharacterStatus
 from flask_login import current_user
+from enum import Enum
+
+
+class CharacterStatus(Enum):
+    learning = 'learning'
+    mastered = 'mastered'
+    assumed = 'assumed'
+    hard = 'hard'
+    hidden = 'hidden'
+    blocked = 'blocked'
 
 
 class DashboardRepository:
