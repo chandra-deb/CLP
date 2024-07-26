@@ -16,3 +16,6 @@ from app import models
 # Here all the bluprint get added to the main application
 from app.auth import auth
 app.register_blueprint(auth, url_prefix='/auth')
+
+from app.account import account
+app.register_blueprint(account)
