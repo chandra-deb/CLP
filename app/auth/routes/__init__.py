@@ -4,3 +4,4 @@
 
 from app.auth.routes.signup import signup
 from app.auth.routes.signin import signin
+from app.auth.routes.signout import signout
