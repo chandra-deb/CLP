@@ -5,7 +5,7 @@
     <title>{{ title }}</title>
 </head>
 <body>
-    <a href="#">Lists</a>
+    <a href="{{ url_for('character.lists') }}">Lists</a>
     <h1>Dashboard</h1>
     <h2>Mastered Characters Count: {{ mastered_chars_count }}</h2>
     <h2>Vocabulary Size: {{ vocabulary_count }}</h2>
