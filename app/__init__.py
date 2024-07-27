@@ -15,12 +15,14 @@ from app import models
 
 # Here all the bluprint gets added to the main application
 from app.auth import auth
-
 app.register_blueprint(auth, url_prefix='/auth')
 
 from app.account import account
-
 app.register_blueprint(account)
+
+from app.character import character
+app.register_blueprint(character)
+
 
 @app.route('/')
 @app.route('/index')
