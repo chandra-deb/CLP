@@ -20,7 +20,7 @@ def signin():
             sa.select(User).where(User.username == form.username.data))
         if user is None or not user.check_password(form.password.data):
             flash('Invalid username or password')
-            return redirect(url_for('signin'))
+            return redirect(url_for('auth.signin'))
         login_user(user, remember=form.remember_me.data)
         return redirect(url_for('account.dashboard'))
     return render_template('signin.html', title='Sign In', form=form)
