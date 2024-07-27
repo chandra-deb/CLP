@@ -1,0 +1,50 @@
+<h1>{{ list.name }}</h1>
+<nav>
+    <div>
+        <span><a href="{{ url_for('character.lists') }}">All Lists</a></span> ->
+        {% for part in list_path_so_far %}
+            <span><a href="{{ url_for('character.sublists', list_path='/'.join(list_path_so_far[:loop.index])) }}">{{ part }}</a></span> ->
+        {% endfor %}
+        <span>{{ list.name }}</span>
+    </div>
+</nav>
+
+{% if sublists|length != 0 %}
+    <h2>Sublists</h2>
+    <ul>
+        {% for sublist in sublists %}
+            <li><a href="{{ url_for('character.sublists', list_path=list_path + '/' + sublist.name) }}">{{ sublist.name }}</a></li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+{% if characters|length != 0 %}
+    <h2>Characters</h2>
+    <ul>
+        {% for character in characters %}
+            <li>{{ character.character }} - {{ character.pinyin }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+
+
+
+{#This version also works well#}
+{#<h1>{{ list.name }}</h1>#}
+{#{% if sublists|length != 0 %}#}
+{#    <h2>Sublists</h2>#}
+{#    <ul>#}
+{#        {% for sublist in sublists %}#}
+{#            <li><a href="{{ url_for('character.character_sublist', list_id=sublist.id) }}">{{ sublist.name }}</a></li>#}
+{#        {% endfor %}#}
+{#    </ul>#}
+{#{% endif %}#}
+{#{% if characters|length != 0 %}#}
+{#    <h2>Characters</h2>#}
+{#    <ul>#}
+{#        {% for character in characters %}#}
+{#            <li>{{ character.character }} - {{ character.pinyin }}</li>#}
+{#        {% endfor %}#}
+{#    </ul>#}
+{#{% endif %}#}
