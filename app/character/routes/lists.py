@@ -7,15 +7,18 @@ from app.character.services import list_service
 from app.models import CharacterList
 
 
-# Revise 2
-# it is not working when different user create character list with same name.
-# It just returns the very first list with the name.
-# It can be solved by also using user id to filter
+# Revise 1
+# !! This codes also works well
 @character.route('/lists')
 def lists():
-    top_level_lists = db.session.scalars(
-        db.select(CharacterList).where(CharacterList.parent_list == None)
-        # .where(CharacterList.is_admin_created == True)
-        # .where(CharacterList.user_id == current_user.id)
+    top_level_user_lists = db.session.scalars(
+        db.select(CharacterList)
+        .where(CharacterList.user_id == current_user.id)
+        .where(CharacterList.parent_list == None)
     ).all()
-    return render_template('lists.html', lists=top_level_lists)
+    top_level_premade_lists = db.session.scalars(
+        db.select(CharacterList)
+        .where(CharacterList.is_admin_created == True)
+        .where(CharacterList.parent_list == None)
+    ).all()
+    return render_template('lists.html', user_lists=top_level_user_lists, premade_lists=top_level_premade_lists)
