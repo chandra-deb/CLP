@@ -1,19 +1,19 @@
 {#These template holds the lists created by admin and custom lists by user#}
 
-
 <h1>Character Lists</h1>
+<h2>My Lists</h2>
 <ul>
-    {% for list in lists %}
-        <li><a href="{{ url_for('character.sublists', list_path=list.name) }}">{{ list.name }}</a></li>
+    {% for list in user_lists %}
+        <li><a href="{{ url_for('character.sublists', list_id=list.id) }}">{{ list.name }}</a></li>
     {% endfor %}
 </ul>
 
+<hr>
+<hr>
+<h2>Pre Made Lists</h2>
+<ul>
+    {% for list in premade_lists %}
+        <li><a href="{{ url_for('character.sublists', list_id=list.id) }}">{{ list.name }}</a></li>
+    {% endfor %}
+</ul>
 
-
-{#This code also works well#}
-{#<h1>Character Lists</h1>#}
-{#<ul>#}
-{#    {% for list in lists %}#}
-{#        <li><a href="{{ url_for('character.character_sublist', list_id=list.id) }}">{{ list.name }}</a></li>#}
-{#    {% endfor %}#}
-{#</ul>#}
