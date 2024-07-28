@@ -21,6 +21,7 @@
 {% endif %}
 {% if characters|length != 0 %}
     <h2>Characters</h2>
+    <a href="{{ url_for('character.reading_practice', list_id=list.id) }}">Reading Practice</a>
     <ul>
         {% for character in characters %}
             <li>{{ character.character }} - {{ character.pinyin }}</li>
