@@ -56,6 +56,76 @@ class ChineseCharacter(db.Model):
 
 class UserCharacterStatus(db.Model):
     __tablename__ = 'user_character_status'
+class UserRecognitionProgress(db.Model):
+    __tablename__ = 'user_recognition_progress'
+    __table_args__ = (UniqueConstraint('user_id', 'character_id', name='unique_user_recognition'),)
+
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'))
+    character_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('chinese_character.id'))
+    status: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, unique=True, nullable=False, default='never_studied')
+    memory_strength: so.Mapped[float] = so.mapped_column(default=0.0)
+    last_practice: so.Mapped[datetime] = so.mapped_column(default=datetime.now)
+    next_practice: so.Mapped[datetime] = so.mapped_column(default=datetime.now)
+    interval: so.Mapped[int] = so.mapped_column(default=1)
+
+    # Relationships
+    user: so.Mapped['User'] = so.relationship('User', back_populates='recognition_progress')
+    character: so.Mapped['ChineseCharacter'] = so.relationship('ChineseCharacter')
+
+    def calculate_memory_strength(self) -> float:
+        now = datetime.now()
+        time_since_last_practice = (now - self.last_practice).days
+
+        # Decay Theory: memory strength decays over time
+        decay_rate = 0.05  # adjust this value to control the decay rate
+        new_memory_strength *= math.exp(-decay_rate * time_since_last_practice)
+
+        # Forgetting Curve: rapid decline in memory retention initially, then levels off
+        forgetting_curve_rate = 0.2  # adjust this value to control the forgetting curve rate
+        new_memory_strength *= math.pow(1 - forgetting_curve_rate, time_since_last_practice)
+
+        new_memory_strength = max(0, min(1, self.memory_strength))
+
+        self.memory_strength = new_memory_strength
+
+        return self.memory_strength
+
+    def update_memory_strength(self, correct: bool) -> None:
+        now = datetime.now()
+        latest_memory_strength = self.calculate_memory_strength()
+
+        if correct:
+            if latest_memory_strength < 0.5:
+                latest_memory_strength = 1.0
+            else:
+                latest_memory_strength += 0.1
+            self.last_practice = now
+        else:
+            if latest_memory_strength > 0.5:
+                latest_memory_strength -= 0.1
+            else:
+                latest_memory_strength = 0.0
+            self.last_practice = now
+
+        # Update the memory strength attribute
+        self.memory_strength = latest_memory_strength
+
+        # Calculate the next practice date based on the memory strength
+        if latest_memory_strength < 1.0:
+            self.interval = 1
+        elif latest_memory_strength < 2.0:
+            self.interval = 3
+        elif latest_memory_strength < 3.0:
+            self.interval = 7
+        elif latest_memory_strength < 4.0:
+            self.interval = 14
+        else:
+            self.interval = 30
+
+        self.next_practice = self.last_practice + timedelta(days=self.interval)
+
+        db.session.commit()
 
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'))
