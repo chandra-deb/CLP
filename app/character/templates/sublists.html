@@ -1,4 +1,20 @@
 {#This version also works well#}
+<html lang="en-US">
+<head>
+    <title>List</title>
+    <style>
+         #strong span, #weak span, #never-sd span {
+            background: blanchedalmond;
+            padding: 5px;
+            margin: 3px;
+            border-radius: 5px;
+            line-height: 35px;
+             font-size: 1.3em;
+        }
+    </style>
+</head>
+<body>
+
 <nav>
     <div>
         <span><a href="{{ url_for('character.lists') }}">All Lists</a></span> ->
@@ -20,11 +36,29 @@
     </ul>
 {% endif %}
 {% if characters|length != 0 %}
-    <h2>Characters</h2>
+    <h2>Strong Words ({{ strong_chars|length }})</h2>
     <a href="{{ url_for('character.reading_practice', list_id=list.id) }}">Reading Practice</a>
-    <ul>
-        {% for character in characters %}
-            <li>{{ character.character }} - {{ character.pinyin }}</li>
+    <div id="strong">
+        {% for character in strong_chars %}
+            <span>{{ character.character }} - {{ character.pinyin }}</span>
         {% endfor %}
-    </ul>
+    </div>
+
+    <h2>Weak Words ({{ weak_chars|length }})</h2>
+    <a href="{{ url_for('character.reading_practice', list_id=list.id) }}">Reading Practice</a>
+    <div id="weak">
+        {% for character in weak_chars %}
+            <span>{{ character.character }} - {{ character.pinyin }}</span>
+        {% endfor %}
+    </div>
+
+    <h2>Never Studied ({{ never_learned_chars|length }})</h2>
+    <a href="{{ url_for('character.reading_practice', list_id=list.id) }}">Reading Practice</a>
+    <div id="never-sd">
+        {% for character in never_learned_chars %}
+            <span>{{ character.character }}</span>
+        {% endfor %}
+    </div>
 {% endif %}
+</body>
+</html>
