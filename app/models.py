@@ -1,11 +1,14 @@
-from datetime import datetime
+import math
+from datetime import datetime, timedelta
 from typing import Optional, List
 import sqlalchemy as sa
 import sqlalchemy.orm as so
+from sqlalchemy import DateTime, UniqueConstraint
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 
 from app import db, login
+
 
 @login.user_loader
 def load_user(id):
@@ -23,8 +26,16 @@ class User(UserMixin, db.Model):
     password_hash: so.Mapped[Optional[str]] = so.mapped_column(sa.String(256))
 
     # Relationships
-    character_statuses: so.Mapped[List['UserCharacterStatus']] = so.relationship('UserCharacterStatus',
-                                                                                 back_populates='user')
+    # character_statuses: so.Mapped[List['UserCharacterStatus']] = so.relationship('UserCharacterStatus',
+    #                                                                              back_populates='user')
+    pinyin_progress: so.Mapped[List['UserPinyinProgress']] = so.relationship('UserPinyinProgress',
+                                                                             back_populates='user')
+    meaning_progress: so.Mapped[List['UserMeaningProgress']] = so.relationship('UserMeaningProgress',
+                                                                               back_populates='user')
+    recognition_progress: so.Mapped[List['UserRecognitionProgress']] = so.relationship('UserRecognitionProgress',
+                                                                                       back_populates='user')
+    writing_progress: so.Mapped[List['UserWritingProgress']] = so.relationship('UserWritingProgress',
+                                                                               back_populates='user')
     notes: so.Mapped[List['UserNote']] = so.relationship('UserNote', back_populates='user')
     character_lists: so.Mapped[List['CharacterList']] = so.relationship('CharacterList', back_populates='user')
 
@@ -42,20 +53,54 @@ class ChineseCharacter(db.Model):
     __tablename__ = 'chinese_character'
 
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
-    character: so.Mapped[str] = so.mapped_column(sa.String(1), index=True, unique=True, nullable=False)
-    pinyin: so.Mapped[str] = so.mapped_column(sa.String(64),index=True, nullable=False)
+    character: so.Mapped[str] = so.mapped_column(sa.String(8), index=True, unique=True, nullable=False)
+    pinyin: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, nullable=False)
+
+    meaning: so.Mapped[str] = so.mapped_column(sa.String(256), index=True, nullable=True)
 
     # Relationships
     character_mappings: so.Mapped[List['CharacterListMapping']] = so.relationship('CharacterListMapping',
                                                                                   back_populates='character')
     notes: so.Mapped[List['UserNote']] = so.relationship('UserNote', back_populates='character')
+    recognition_progress: so.Mapped[List['UserRecognitionProgress']] = so.relationship('UserRecognitionProgress',
+                                                                                       lazy='joined')
+
 
     def __repr__(self):
         return f'<ChineseCharacter {self.character}>'
 
 
-class UserCharacterStatus(db.Model):
-    __tablename__ = 'user_character_status'
+# class UserCharacterProgression(db.Model):
+#     __tablename__ = 'user_progression'
+#     id: so.Mapped[int] = so.mapped_column(primary_key=True)
+#     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'))
+#     character_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('chinese_character.id'))
+#
+#     prog_status_in_pinyin = so.mapped_column(sa.String(64), index=True, unique=True, nullable=False)
+#     prog_status_in_meaning = so.mapped_column(sa.String(64), index=True, unique=True, nullable=False)
+#     prog_status_in_recognition = so.mapped_column(sa.String(64), index=True, unique=True, nullable=False)
+#     status_in_writing = so.mapped_column(sa.String(64), index=True, unique=True, nullable=False)
+#
+
+#----------Replace BY -----------#
+# class UserCharacterStatus(db.Model):
+#     __tablename__ = 'user_character_status'
+#
+#     id: so.Mapped[int] = so.mapped_column(primary_key=True)
+#     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'))
+#     character_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('chinese_character.id'))
+#     status: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, unique=True, nullable=False)
+#
+#     # Relationships
+#     user: so.Mapped['User'] = so.relationship('User', back_populates='character_statuses')
+#     character: so.Mapped['ChineseCharacter'] = so.relationship('ChineseCharacter')
+#
+#     def __repr__(self):
+#         return f'<UserCharacterStatus {self.status}>'
+
+
+#---------------THESE------------------#
+
 class UserRecognitionProgress(db.Model):
     __tablename__ = 'user_recognition_progress'
     __table_args__ = (UniqueConstraint('user_id', 'character_id', name='unique_user_recognition'),)
@@ -63,7 +108,8 @@ class UserRecognitionProgress(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'))
     character_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('chinese_character.id'))
-    status: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, unique=True, nullable=False, default='never_studied')
+    status: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, unique=False, nullable=False,
+                                              default='never_studied')
     memory_strength: so.Mapped[float] = so.mapped_column(default=0.0)
     last_practice: so.Mapped[datetime] = so.mapped_column(default=datetime.now)
     next_practice: so.Mapped[datetime] = so.mapped_column(default=datetime.now)
@@ -76,20 +122,24 @@ class UserRecognitionProgress(db.Model):
     def calculate_memory_strength(self) -> float:
         now = datetime.now()
         time_since_last_practice = (now - self.last_practice).days
+        new_memory_strength = self.memory_strength
+        # print(f'Prev Strength of {self.character.character} is {new_memory_strength}')
 
         # Decay Theory: memory strength decays over time
         decay_rate = 0.05  # adjust this value to control the decay rate
+        # print('just print ',new_memory_strength * math.exp(-decay_rate * time_since_last_practice))
         new_memory_strength *= math.exp(-decay_rate * time_since_last_practice)
+        # print('memory strength after decay: ', new_memory_strength)
 
         # Forgetting Curve: rapid decline in memory retention initially, then levels off
         forgetting_curve_rate = 0.2  # adjust this value to control the forgetting curve rate
         new_memory_strength *= math.pow(1 - forgetting_curve_rate, time_since_last_practice)
 
-        new_memory_strength = max(0, min(1, self.memory_strength))
+        new_memory_strength = max(0, min(1, new_memory_strength))
 
-        self.memory_strength = new_memory_strength
-
-        return self.memory_strength
+        # self.memory_strength = new_memory_strength
+        # print(f'Now Strength of {self.character.character} is {self.memory_strength}')
+        return new_memory_strength
 
     def update_memory_strength(self, correct: bool) -> None:
         now = datetime.now()
@@ -127,18 +177,234 @@ class UserRecognitionProgress(db.Model):
 
         db.session.commit()
 
+
+
+
+
+# class UserRecognitionProgress(db.Model):
+#     __tablename__ = 'user_recognition_progress'
+#     __table_args__ = (UniqueConstraint('user_id', 'character_id', name='unique_user_recognition'),)
+#
+#     id: so.Mapped[int] = so.mapped_column(primary_key=True)
+#     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'))
+#     character_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('chinese_character.id'))
+#     status: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, unique=True, nullable=False,
+#                                               default='never_studied')
+#     memory_strength: so.Mapped[float] = so.mapped_column(default=0.0)
+#     last_practice: so.Mapped[datetime] = so.mapped_column(default=datetime.now())
+#     next_practice: so.Mapped[datetime] = so.mapped_column(default=datetime.now())
+#     interval: so.Mapped[int] = so.mapped_column(default=1)
+#
+#     # Relationships
+#     user: so.Mapped['User'] = so.relationship('User', back_populates='recognition_progress')
+#     character: so.Mapped['ChineseCharacter'] = so.relationship('ChineseCharacter')
+#
+#     def update_memory_strength(self, correct: bool) -> None:
+#         """
+#         Update the memory strength based on the spaced repetition algorithm.
+#
+#         :param correct: Whether the user answered correctly or not
+#         """
+#         now = datetime.now()
+#         if correct:
+#             if self.memory_strength < 0.5:
+#                 self.memory_strength = 1.0
+#             else:
+#                 self.memory_strength += 0.1
+#             self.last_practice = now
+#         else:
+#             if self.memory_strength > 0.5:
+#                 self.memory_strength -= 0.1
+#             else:
+#                 self.memory_strength = 0.0
+#             self.last_practice = now
+#
+#         # Calculate the next practice date based on the memory strength
+#         if self.memory_strength < 1.0:
+#             self.interval = 1
+#         elif self.memory_strength < 2.0:
+#             self.interval = 3
+#         elif self.memory_strength < 3.0:
+#             self.interval = 7
+#         elif self.memory_strength < 4.0:
+#             self.interval = 14
+#         else:
+#             self.interval = 30
+#
+#         self.next_practice = self.last_practice + timedelta(days=self.interval)
+#
+#         db.session.commit()
+
+
+class UserPinyinProgress(db.Model):
+    __tablename__ = 'user_pinyin_progress'
+    __table_args__ = (UniqueConstraint('user_id', 'character_id', name='unique_user_pinyin'),)
+
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'))
     character_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('chinese_character.id'))
-    status: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, unique=True, nullable=False)
+    status: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, unique=True, nullable=False,
+                                              default='never_studied')
+    memory_strength: so.Mapped[float] = so.mapped_column(default=0.0)
+    last_practice: so.Mapped[datetime] = so.mapped_column(default=datetime.now())
+    next_practice: so.Mapped[datetime] = so.mapped_column(default=datetime.now())
+    interval: so.Mapped[int] = so.mapped_column(default=1)
 
     # Relationships
-    user: so.Mapped['User'] = so.relationship('User', back_populates='character_statuses')
+    user: so.Mapped['User'] = so.relationship('User', back_populates='pinyin_progress')
     character: so.Mapped['ChineseCharacter'] = so.relationship('ChineseCharacter')
 
-    def __repr__(self):
-        return f'<UserCharacterStatus {self.status}>'
+    def update_memory_strength(self, correct: bool) -> None:
+        """
+        Update the memory strength based on the spaced repetition algorithm.
 
+        :param correct: Whether the user answered correctly or not
+        """
+        now = datetime.now()
+        if correct:
+            if self.memory_strength < 0.5:
+                self.memory_strength = 1.0
+            else:
+                self.memory_strength += 0.1
+            self.last_practice = now
+        else:
+            if self.memory_strength > 0.5:
+                self.memory_strength -= 0.1
+            else:
+                self.memory_strength = 0.0
+            self.last_practice = now
+
+        # Calculate the next practice date based on the memory strength
+        if self.memory_strength < 1.0:
+            self.interval = 1
+        elif self.memory_strength < 2.0:
+            self.interval = 3
+        elif self.memory_strength < 3.0:
+            self.interval = 7
+        elif self.memory_strength < 4.0:
+            self.interval = 14
+        else:
+            self.interval = 30
+
+        self.next_practice = self.last_practice + timedelta(days=self.interval)
+
+        db.session.commit()
+
+
+
+
+
+class UserMeaningProgress(db.Model):
+    __tablename__ = 'user_meaning_progress'
+    __table_args__ = (UniqueConstraint('user_id', 'character_id', name='unique_user_meaning'),)
+
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'))
+    character_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('chinese_character.id'))
+    status: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, unique=True, nullable=False,
+                                              default='never_studied')
+    memory_strength: so.Mapped[float] = so.mapped_column(default=0.0)
+    last_practice: so.Mapped[datetime] = so.mapped_column(default=datetime.now())
+    next_practice: so.Mapped[datetime] = so.mapped_column(default=datetime.now())
+    interval: so.Mapped[int] = so.mapped_column(default=1)
+
+    # Relationships
+    user: so.Mapped['User'] = so.relationship('User', back_populates='meaning_progress')
+    character: so.Mapped['ChineseCharacter'] = so.relationship('ChineseCharacter')
+
+    def update_memory_strength(self, correct: bool) -> None:
+        """
+        Update the memory strength based on the spaced repetition algorithm.
+
+        :param correct: Whether the user answered correctly or not
+        """
+        now = datetime.now()
+        if correct:
+            if self.memory_strength < 0.5:
+                self.memory_strength = 1.0
+            else:
+                self.memory_strength += 0.1
+            self.last_practice = now
+        else:
+            if self.memory_strength > 0.5:
+                self.memory_strength -= 0.1
+            else:
+                self.memory_strength = 0.0
+            self.last_practice = now
+
+        # Calculate the next practice date based on the memory strength
+        if self.memory_strength < 1.0:
+            self.interval = 1
+        elif self.memory_strength < 2.0:
+            self.interval = 3
+        elif self.memory_strength < 3.0:
+            self.interval = 7
+        elif self.memory_strength < 4.0:
+            self.interval = 14
+        else:
+            self.interval = 30
+
+        self.next_practice = self.last_practice + timedelta(days=self.interval)
+
+        db.session.commit()
+
+
+class UserWritingProgress(db.Model):
+    __tablename__ = 'user_writing_progress'
+    __table_args__ = (UniqueConstraint('user_id', 'character_id', name='unique_user_writing'),)
+
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'))
+    character_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('chinese_character.id'))
+    status: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, unique=True, nullable=False,
+                                              default='never_studied')
+    memory_strength: so.Mapped[float] = so.mapped_column(default=0.0)
+    last_practice: so.Mapped[datetime] = so.mapped_column(default=datetime.now())
+    next_practice: so.Mapped[datetime] = so.mapped_column(default=datetime.now())
+    interval: so.Mapped[int] = so.mapped_column(default=1)
+
+    # Relationships
+    user: so.Mapped['User'] = so.relationship('User', back_populates='writing_progress')
+    character: so.Mapped['ChineseCharacter'] = so.relationship('ChineseCharacter')
+
+    def update_memory_strength(self, correct: bool) -> None:
+        """
+        Update the memory strength based on the spaced repetition algorithm.
+
+        :param correct: Whether the user answered correctly or not
+        """
+        now = datetime.now()
+        if correct:
+            if self.memory_strength < 0.5:
+                self.memory_strength = 1.0
+            else:
+                self.memory_strength += 0.1
+            self.last_practice = now
+        else:
+            if self.memory_strength > 0.5:
+                self.memory_strength -= 0.1
+            else:
+                self.memory_strength = 0.0
+            self.last_practice = now
+
+        # Calculate the next practice date based on the memory strength
+        if self.memory_strength < 1.0:
+            self.interval = 1
+        elif self.memory_strength < 2.0:
+            self.interval = 3
+        elif self.memory_strength < 3.0:
+            self.interval = 7
+        elif self.memory_strength < 4.0:
+            self.interval = 14
+        else:
+            self.interval = 30
+
+        self.next_practice = self.last_practice + timedelta(days=self.interval)
+
+        db.session.commit()
+
+
+#----------End-----------#
 
 class CharacterList(db.Model):
     __tablename__ = 'character_list'
@@ -194,3 +460,21 @@ class UserNote(db.Model):
         return f'<UserNote {self.user_id}-{self.character_id}>'
 
 
+# def update_memory_strength(self, correct: bool) -> None:
+#     """
+#     Update the memory strength based on the spaced repetition algorithm.
+#
+#     :param correct: Whether the user answered correctly or not
+#     """
+#     now = datetime.now()
+#     self.memory_strength = max(0.0, min(5.0, self.memory_strength + (0.1 if correct else -0.1)))
+#     self.last_practice = now
+#
+#     intervals = [1, 3, 7, 14, 30]
+#     self.interval = intervals[min(int(self.memory_strength), len(intervals) - 1)]
+#     self.next_practice = self.last_practice + timedelta(days=self.interval)
+#
+#     try:
+#         db.session.commit()
+#     except Exception as e:
+#         print(f"Error committing to the database: {e}")
