@@ -18,25 +18,25 @@ class DashboardService:
 
     @property
     def learning_chars_len(self) -> int:
-        return self.dashboard_repository.get_char_len_with_given_status(CharacterStatus.learning)
+        return self.dashboard_repository.get_chars_len_with_given_status(CharacterStatus.learning)
 
     @property
     def mastered_chars_len(self) -> int:
-        return self.dashboard_repository.get_char_len_with_given_status(CharacterStatus.mastered)
+        return self.dashboard_repository.get_chars_len_with_given_status(CharacterStatus.mastered)
 
     @property
     def assumed_chars_len(self) -> int:
-        return self.dashboard_repository.get_char_len_with_given_status(CharacterStatus.assumed)
+        return self.dashboard_repository.get_chars_len_with_given_status(CharacterStatus.assumed)
 
     @property
     def blocked_chars_len(self) -> int:
-        return self.dashboard_repository.get_char_len_with_given_status(CharacterStatus.blocked)
+        return self.dashboard_repository.get_chars_len_with_given_status(CharacterStatus.blocked)
 
     @property
     def hidden_chars_len(self) -> int:
-        return self.dashboard_repository.get_char_len_with_given_status(CharacterStatus.hidden)
+        return self.dashboard_repository.get_chars_len_with_given_status(CharacterStatus.hidden)
 
     @property
     def hard_chars_len(self) -> int:
-        return self.dashboard_repository.get_char_len_with_given_status(CharacterStatus.hard)
+        return self.dashboard_repository.get_chars_len_with_given_status(CharacterStatus.hard)
 
