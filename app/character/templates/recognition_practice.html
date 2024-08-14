@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <title>{{ title }}</title>
+    <style>
+      /* Global styles */
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f9f9f9;
+      }
+
+      /* Container styles */
+      #recognitionPractice {
+        max-width: 600px;
+        margin: 40px auto;
+        padding: 20px;
+        background-color: #fff;
+        border: 1px solid #ddd;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Progress bar styles */
+      .progress {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding: 10px;
+        background-color: #eeeeee;
+        border-radius: 10px;
+        font-size: 18px;
+        font-weight: bold;
+      }
+
+      .progress #progress-bar {
+        background-color: red;
+        height: 10px;
+        border-radius: 10px;
+        width: 100%;
+      }
+      .progress #progress-bar #progress-visible {
+          position: relative;
+          background-color: green;
+        height: 10px;
+        border-radius: 10px;
+      }
+
+      /* Character display styles */
+      h1 {
+        margin-top: 0;
+        font-size: 36px;
+        font-weight: bold;
+        text-align: center;
+      }
+
+      /* Button styles */
+      button {
+        margin: 10px;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 10px;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+
+      .yes-button {
+        background-color: #4CAF50;
+        color: #fff;
+      }
+
+      .yes-button:hover {
+        background-color: #3e8e41;
+      }
+
+      .no-button {
+        background-color: #f44336;
+        color: #fff;
+      }
+
+      .no-button:hover {
+        background-color: #d32f2f;
+      }
+
+      /* Details display styles */
+      .details {
+        margin-top: 20px;
+        padding: 20px;
+        background-color: #f7f7f7;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        text-align: center;
+      }
+
+      .details p {
+        margin-bottom: 10px;
+      }
+
+      .details button {
+        margin: 10px;
+      }
+
+    </style>
+</head>
+<body>
+    <div id="recognitionPractice">
+        <div v-if="!practiceDone">
+           <div class="progress">
+            <span>[[ studiedChars.length ]]/[[ characters.length ]] characters studied</span>
+            <div id="progress-bar">
+            <div id="progress-visible" :style="{ 'width': progressPercent + '%' }"></div>
+            </div>
+        </div>
+        <div v-if="currentCharacter">
+            <h1>[[ currentCharacter.character ]]</h1>
+            <div v-if="currentCharacter.charState === 'done' && !showDetailsVisible">
+                <p>Do you remember this character?</p>
+                <button class="yes-button" @click="showDetails">Yes</button>
+                <button class="no-button" @click="markForgot">No</button>
+            </div>
+            <div v-if="currentCharacter.charState === 'new'">
+                <p>Pinyin: [[ currentCharacter.pinyin ]]</p>
+                <p>Meaning: [[ currentCharacter.meaning ]]</p>
+                <button @click="markDone">Done studying</button>
+            </div>
+        </div>
+        <div v-if="showDetailsVisible" class="details">
+            <p>Pinyin: [[ currentCharacter.pinyin ]]</p>
+            <p>Meaning: [[ currentCharacter.meaning ]]</p>
+            <button class="yes-button" @click="markCorrect">Correct</button>
+            <button class="no-button" @click="markIncorrect">Incorrect</button>
+        </div>
+        </div>
+
+    </div>
+<script>
+    let charactersDataJson = '{{ characters | tojson }}'
+</script>
+<script type="module" src="{{ url_for('.static', filename='js/recognitionPractice.js') }}"></script>
+</body>
+</html>
