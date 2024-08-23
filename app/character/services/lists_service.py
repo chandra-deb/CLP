@@ -11,6 +11,15 @@ class ListsService:
     def get_list_by_id(self, list_id: int) -> CharacterList:
         return self.repository.get_list_by_id(list_id)
 
+    def create_list(self, name: str, parent_list_id: int = None) -> CharacterList:
+        return self.repository.create_list(name=name, user_id=current_user.id, parent_id=parent_list_id)
+
+    def delete_list(self, list_id: int):
+        self.repository.delete_list(list_id)
+
+    def update_list_name(self, list_id: int, name: str):
+        self.repository.update_list_name(list_id, name)
+
     def get_characters_by_list_id(self, list_id: int) -> list[ChineseCharacter]:
         return self.get_list_by_id(list_id).characters
 

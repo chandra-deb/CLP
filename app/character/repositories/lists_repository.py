@@ -24,6 +24,23 @@ class ListsRepository:
     #     character_list = self.db.session.scalars(select(CharacterList).where(CharacterList.id == list_id)).first()
     #     return character_list
 
+    def create_list(self, name: str, parent_id: int = None, user_id: int = None,
+                    is_admin_created: bool = False) -> CharacterList:
+        # character_list = CharacterList(name, is_admin_created, user_id,  parent_id)
+        character_list = CharacterList(name=name,is_admin_created=is_admin_created,
+                                       user_id=user_id, parent_list_id=parent_id)
+        self.db.session.add(character_list)
+        self.db.session.commit()
+        return character_list
+
+    def delete_list(self, list_id: int):
+        self.db.session.query(CharacterList).filter_by(id=list_id).delete()
+        self.db.session.commit()
+
+    def update_list_name(self, list_id: int, name: str):
+        self.db.session.query(CharacterList).filter_by(id=list_id).update(name)
+        self.db.session.commit()
+
     def get_all_parent_lists(self, list_id):
         # Create a CTE to recursively get all parents
         parent_cte = (self.db.session.query(CharacterList)
