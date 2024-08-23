@@ -1,12 +1,40 @@
 {#These template holds the lists created by admin and custom lists by user#}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script type="module" src="{{ url_for('.static', filename='js/userCharLists.js') }}"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+
+
+    <title>Document</title>
+</head>
+<body>
 
 <h1>Character Lists</h1>
-<h2>My Lists</h2>
-<ul>
-    {% for list in user_lists %}
-        <li><a href="{{ url_for('character.sublists', list_id=list.id) }}">{{ list.name }}</a></li>
-    {% endfor %}
-</ul>
+<div id="app">
+    <h2>My Lists <button @click="toggleInputBox">Create List</button></h2>
+        <span>[[listName]]</span>
+        <div v-if="isInputBoxOpen">
+            <input type="text" v-model="listName">
+            <button type="button" @click="createList">Ok</button>
+            <p style="color: indianred" v-if="errorMsg">[[errorMsg]]</p>
+
+        </div>
+
+    <ul>
+        {% for list in user_lists %}
+            <li><a href="{{ url_for('character.sublists', list_id=list.id) }}">{{ list.name }}</a></li>
+        {% endfor %}
+    </ul>
+
+</div>
+
 
 <hr>
 <hr>
@@ -16,4 +44,7 @@
         <li><a href="{{ url_for('character.sublists', list_id=list.id) }}">{{ list.name }}</a></li>
     {% endfor %}
 </ul>
+
+</body>
+</html>
 
