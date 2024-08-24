@@ -13,7 +13,7 @@ let grabbedListId = NaN
 const inputValue = ref('')
 const isLoading = ref(false)
 
-function pinList(listId){
+function pinList(listId) {
     console.log(listId, 'From pinLIst')
     try {
         listId = parseInt(listId)
@@ -35,8 +35,9 @@ function pinList(listId){
         });
 
 }
-function unpinList(listId){
-        console.log(listId, 'From pinLIst')
+
+function unpinList(listId) {
+    console.log(listId, 'From pinLIst')
     try {
         listId = parseInt(listId)
     } catch (e) {
@@ -137,6 +138,7 @@ function showDeleteModal(listName, listId) {
     isDisplayDeleteModal.value = true
     grabbedListName = listName
     grabbedListId = listId
+    console.log(grabbedListName)
 
 }
 
@@ -146,12 +148,23 @@ function confirmDelete() {
         errorMsg.value = ''
         isLoading.value = true
         isDisplayDeleteModal.value = false
-        setInterval(
-            () => {
-            },
-            10000,
-        )
-        window.location.reload();
+        try {
+            grabbedListId = parseInt(grabbedListId)
+        } catch (e) {
+            console.error(e)
+        }
+        const data = {
+            listId: grabbedListId,
+        }
+        axios.post('/character/delete_list', data)
+            .then(function (response) {
+                console.log(response.data);
+                window.location.reload()
+            })
+            .catch(function (error) {
+                console.log(error);
+                errorMsg.value = error
+            });
     } else {
         errorMsg.value = 'Please write the correct list name.';
     }

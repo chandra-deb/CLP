@@ -35,6 +35,7 @@ class ListsRepository:
         return character_list
 
     def delete_list(self, list_id: int):
+        self.unpin_list(list_id)
         self.db.session.query(CharacterList).filter_by(id=list_id).delete()
         self.db.session.commit()
 
@@ -71,6 +72,7 @@ class ListsRepository:
 
     def get_user_pinned_lists(self):
         pinned_lists = [char_list_ref.character_list for char_list_ref in current_user.pinned_character_lists]
+        print('Pinned LIsts VAAA: ', pinned_lists)
         return pinned_lists
 
     def get_user_pinned_sub_lists(self, parent_list_id: int, user_id: int):
@@ -96,9 +98,10 @@ class ListsRepository:
         for ref in pinned_lists_ref:
             if ref.character_list.id == list_id:
                 pinned_ref_id = ref.id
+                self.db.session.query(PinnedCharacterList).filter_by(id=pinned_ref_id).delete()
+                self.db.session.commit()
                 break
-        self.db.session.query(PinnedCharacterList).filter_by(id=pinned_ref_id).delete()
-        self.db.session.commit()
+
 
 
     def get_top_level_premade_lists(self):
