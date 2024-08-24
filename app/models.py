@@ -382,6 +382,8 @@ class CharacterList(db.Model):
 class PinnedCharacterList(db.Model):
     __tablename__ = 'pinned_character_list'
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    character_list_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('character_list.id'))
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'))
 
 #     Relationships
     user: so.Mapped[Optional['User']] = so.relationship('User', back_populates='pinned_character_lists')
