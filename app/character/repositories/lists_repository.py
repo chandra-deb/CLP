@@ -70,7 +70,6 @@ class ListsRepository:
         return top_level_user_lists
 
     def get_user_pinned_lists(self):
-        print('Pinned Characters', current_user.pinned_character_lists[0].character_list.name)
         pinned_lists = [char_list_ref.character_list for char_list_ref in current_user.pinned_character_lists]
         return pinned_lists
 
