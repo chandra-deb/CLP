@@ -1,0 +1,43 @@
+<div id="base-modal-container">
+    <div v-if="isDisplayCreateModal" class="bottom-sheet-container">
+        <div class="modal-sheet">
+            <div>
+                <input v-model="inputValue" type="text">
+                <p style="color: indianred" v-if="errorMsg">[[errorMsg]]</p>
+            </div>
+            <div class="con-btns">
+                <button @click="closeCreateListModal">Cancel</button>
+                <button @click="confirmCreateList">Create</button>
+            </div>
+        </div>
+    </div>
+
+    {#Delete Model#}
+    <div v-if="isDisplayDeleteModal" class="bottom-sheet-container">
+        <div class="modal-sheet">
+            <div>
+                <p>To Delete, Specify the list name correctly.</p>
+                <input v-model="inputValue" type="text">
+                <p style="color: indianred" v-if="errorMsg">[[errorMsg]]</p>
+
+            </div>
+            <div class="con-btns">
+                <button @click="toggleDeleteModal">Cancel</button>
+                <button @click="confirmDelete">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <div v-if="isDisplayEditModal" class="bottom-sheet-container">
+        <div class="modal-sheet">
+            <div>
+                <input v-model="inputValue" type="text">
+                <p style="color: indianred" v-if="errorMsg">[[errorMsg]]</p>
+            </div>
+            <div class="con-btns">
+                <button @click="closeEditModal">Cancel</button>
+                <button @click="confirmEdit">Update</button>
+            </div>
+        </div>
+    </div>
+</div>

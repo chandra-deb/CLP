@@ -2,31 +2,114 @@
 <html lang="en-US">
 <head>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script type="module" src="{{ url_for('.static', filename='js/userCharLists.js') }}"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 
     <title>List</title>
     <style>
-         #strong span, #weak span, #never-sd span {
+        #strong span, #weak span, #never-sd span {
             background: blanchedalmond;
             padding: 5px;
             margin: 3px;
             border-radius: 5px;
             line-height: 35px;
-             font-size: 1.3em;
+            font-size: 1.3em;
         }
-         .selected-button {
-  background-color: #4CAF50;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  padding: 10px 20px;
-  font-size: 16px;
-  cursor: pointer;
-}
 
-.selected-button:hover {
-  background-color: #3e8e41;
-}
+        .selected-button {
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .selected-button:hover {
+            background-color: #3e8e41;
+        }
+
+        .list-card {
+            background: cadetblue;
+            padding: 8px;
+            margin: 10px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .list-card a {
+            color: black;
+            text-decoration: none;
+        }
+
+        .list-card a:hover {
+            color: rebeccapurple;
+        }
+
+        .list-card .action-buttons button {
+            margin-left: 2px;
+        }
+
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5); /* Add a dark background to block clicks */
+            z-index: 1000; /* Make sure the modal sheet is on top of everything */
+            overflow-y: auto; /* Add this to make the modal sheet cover the whole page */
+            overflow-x: hidden; /* Add this to prevent horizontal scrolling */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-sheet {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            max-width: 480px;
+
+        }
+
+        .modal-sheet .con-btns {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .bottom-sheet-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5); /* Add a dark background to block clicks */
+            z-index: 1000; /* Make sure the modal sheet is on top of everything */
+            overflow-y: auto; /* Add this to make the modal sheet cover the whole page */
+            overflow-x: hidden; /* Add this to prevent horizontal scrolling */
+            display: flex;
+            justify-content: center;
+        }
+
+        .modal-sheet {
+            /* Make the modal sheet overlap the whole window */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+
+        }
+
+        .modal-sheet > div {
+            /* Style the inner content of the modal sheet */
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
     </style>
 </head>
 <body>
@@ -43,164 +126,163 @@
 
 
 <div id="app">
-    <h1>{{ list.name }}
-        {% if not list.is_admin_created or characters | length == 0 %}
-        <button @click="toggleInputBox">Create List</button>
-    {% endif %}
-    </h1>
+    {% include 'modals/modal.html' %}
 
-        <div v-if="isInputBoxOpen">
-            <input type="text" v-model="listName">
-            <button type="button" @click="createList">Ok</button>
-            <p style="color: indianred" v-if="errorMsg">[[errorMsg]]</p>
-        </div>
-    {% if child_lists|length != 0 %}
-        <h2>Sublists</h2>
-        <ul>
-            {% for child_list in child_lists %}
-                <li><a href="{{ url_for('character.sublists', list_id=child_list.id) }}">{{ child_list.name }}</a></li>
-            {% endfor %}
-        </ul>
-    {% endif %}
+    <h2>{{ list.name }}
+        {% if not list.is_admin_created and characters | length == 0 %}
+            <button @click="showCreateListModal">&#10010</button>
+
+        {% endif %}
+    </h2>
+
+    {% with lists = child_lists %}
+        {% include 'parts/char_lists_part.html' %}
+    {% endwith %}
 </div>
 
 <div id="studyPopup">
-{% if characters|length != 0 %}
-    {% if strong_chars|length != 0 %}
-        <h2>Strong Words ({{ strong_chars|length }})</h2>
-        <a href="{{ url_for('character.reading_practice', list_id=list.id) }}">Reading Practice</a>
-                <button v-if="!showSSPopup" @click="openSSPopUp">Practice</button>
-<div style="position: relative">
-  <div v-if="showSSPopup" class="popup">
-    <button @click="showSizes"
-      :class = "{ 'selected-button': selectedOption === 'size' }">Words</button>
-    <button @click="showTimes"
-    :class = "{ 'selected-button': selectedOption === 'time' }">Times</button>
-    <div v-if="showSizesList">
-      <button
-        v-for="size in sizes"
-        :key="size"
-        @click="selectOption('size', size)"
-        :class="{ 'selected-button': selectedOption === 'size' && selectedValue === size }"
-      >
-        [[ size ]]
-      </button>
-    </div>
-    <div v-if="showTimesList">
-      <button
-        v-for="time in times"
-        :key="time"
-        @click="selectOption('time', time)"
-        :class="{ 'selected-button' : selectedOption === 'time' && selectedValue === time }"
-      >
-        [[time]]
-      </button>
-    </div>
-    <button @click="start">Start</button>
-    <button @click="closeSSPopUp">Close</button>
-  </div>
-</div>
+    {% if characters|length != 0 %}
+        {% if strong_chars|length != 0 %}
+            <h2>Strong Words ({{ strong_chars|length }})</h2>
+            <a href="{{ url_for('character.reading_practice', list_id=list.id) }}">Reading Practice</a>
+            <button v-if="!showSSPopup" @click="openSSPopUp">Practice</button>
+            <div style="position: relative">
+                <div v-if="showSSPopup" class="popup">
+                    <button @click="showSizes"
+                            :class="{ 'selected-button': selectedOption === 'size' }">Words
+                    </button>
+                    <button @click="showTimes"
+                            :class="{ 'selected-button': selectedOption === 'time' }">Times
+                    </button>
+                    <div v-if="showSizesList">
+                        <button
+                                v-for="size in sizes"
+                                :key="size"
+                                @click="selectOption('size', size)"
+                                :class="{ 'selected-button': selectedOption === 'size' && selectedValue === size }"
+                        >
+                            [[ size ]]
+                        </button>
+                    </div>
+                    <div v-if="showTimesList">
+                        <button
+                                v-for="time in times"
+                                :key="time"
+                                @click="selectOption('time', time)"
+                                :class="{ 'selected-button' : selectedOption === 'time' && selectedValue === time }"
+                        >
+                            [[time]]
+                        </button>
+                    </div>
+                    <button @click="start">Start</button>
+                    <button @click="closeSSPopUp">Close</button>
+                </div>
+            </div>
 
-        <div id="strong">
-            {% for character in strong_chars %}
-                <span>{{ character.character }}</span>
-            {% endfor %}
-        </div>
-    {% endif %}
-    {% if weak_chars|length != 0 %}
-        <h2>Weak Words ({{ weak_chars|length }})</h2>
-        <a href="{{ url_for('character.reading_practice', list_id=list.id) }}">Reading Practice</a>
-                  <button v-if="!showWSPopup" @click="openWSPopUp">Practice</button>
-<div style="position: relative">
-  <div v-if="showWSPopup" class="popup">
-    <button @click="showSizes"
-      :class = "{ 'selected-button': selectedOption === 'size' }">Words</button>
-    <button @click="showTimes"
-    :class = "{ 'selected-button': selectedOption === 'time' }">Times</button>
-    <div v-if="showSizesList">
-      <button
-        v-for="size in sizes"
-        :key="size"
-        @click="selectOption('size', size)"
-        :class="{ 'selected-button': selectedOption === 'size' && selectedValue === size }"
-      >
-        [[ size ]]
-      </button>
-    </div>
-    <div v-if="showTimesList">
-      <button
-        v-for="time in times"
-        :key="time"
-        @click="selectOption('time', time)"
-        :class="{ 'selected-button' : selectedOption === 'time' && selectedValue === time }"
-      >
-        [[time]]
-      </button>
-    </div>
-    <button @click="start">Start</button>
-    <button @click="closeWSPopUp">Close</button>
-  </div>
-</div>
+            <div id="strong">
+                {% for character in strong_chars %}
+                    <span>{{ character.character }}</span>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% if weak_chars|length != 0 %}
+            <h2>Weak Words ({{ weak_chars|length }})</h2>
+            <a href="{{ url_for('character.reading_practice', list_id=list.id) }}">Reading Practice</a>
+            <button v-if="!showWSPopup" @click="openWSPopUp">Practice</button>
+            <div style="position: relative">
+                <div v-if="showWSPopup" class="popup">
+                    <button @click="showSizes"
+                            :class="{ 'selected-button': selectedOption === 'size' }">Words
+                    </button>
+                    <button @click="showTimes"
+                            :class="{ 'selected-button': selectedOption === 'time' }">Times
+                    </button>
+                    <div v-if="showSizesList">
+                        <button
+                                v-for="size in sizes"
+                                :key="size"
+                                @click="selectOption('size', size)"
+                                :class="{ 'selected-button': selectedOption === 'size' && selectedValue === size }"
+                        >
+                            [[ size ]]
+                        </button>
+                    </div>
+                    <div v-if="showTimesList">
+                        <button
+                                v-for="time in times"
+                                :key="time"
+                                @click="selectOption('time', time)"
+                                :class="{ 'selected-button' : selectedOption === 'time' && selectedValue === time }"
+                        >
+                            [[time]]
+                        </button>
+                    </div>
+                    <button @click="start">Start</button>
+                    <button @click="closeWSPopUp">Close</button>
+                </div>
+            </div>
 
-        <div id="weak">
-            {% for character in weak_chars %}
-                <span>{{ character.character }} - {{ character.pinyin }}</span>
-            {% endfor %}
-        </div>
-    {% endif %}
+            <div id="weak">
+                {% for character in weak_chars %}
+                    <span>{{ character.character }} - {{ character.pinyin }}</span>
+                {% endfor %}
+            </div>
+        {% endif %}
 
-    {% if never_learned_chars|length != 0 %}
-        <h2>Never Studied ({{ never_learned_chars|length }})</h2>
-        <a href="{{ url_for('character.sns', list_id=list.id) }}">Learn 10 new words</a>
-<!-- Vue   -->
-        <button v-if="!showNSPopup" @click="openNSPopUp">Practice</button>
-<div style="position: relative">
-  <div v-if="showNSPopup" class="popup">
-    <button @click="showSizes"
-      :class = "{ 'selected-button': selectedOption === 'size' }">Words</button>
-    <button @click="showTimes"
-    :class = "{ 'selected-button': selectedOption === 'time' }">Times</button>
-    <div v-if="showSizesList">
-      <button
-        v-for="size in sizes"
-        :key="size"
-        @click="selectOption('size', size)"
-        :class="{ 'selected-button': selectedOption === 'size' && selectedValue === size }"
-      >
-        [[ size ]]
-      </button>
-    </div>
-    <div v-if="showTimesList">
-      <button
-        v-for="time in times"
-        :key="time"
-        @click="selectOption('time', time)"
-        :class="{ 'selected-button' : selectedOption === 'time' && selectedValue === time }"
-      >
-        [[time]]
-      </button>
-    </div>
-    <button @click="start">Start</button>
-    <button @click="closeNSPopUp">Close</button>
-  </div>
-</div>
-<!--Vue End-->
-        <div id="never-sd">
-            {% for character in never_learned_chars %}
-                <span>{{ character.character }}</span>
-            {% endfor %}
-        </div>
+        {% if never_learned_chars|length != 0 %}
+            <h2>Never Studied ({{ never_learned_chars|length }})</h2>
+            <a href="{{ url_for('character.sns', list_id=list.id) }}">Learn 10 new words</a>
+            <!-- Vue   -->
+            <button v-if="!showNSPopup" @click="openNSPopUp">Practice</button>
+            <div style="position: relative">
+                <div v-if="showNSPopup" class="popup">
+                    <button @click="showSizes"
+                            :class="{ 'selected-button': selectedOption === 'size' }">Words
+                    </button>
+                    <button @click="showTimes"
+                            :class="{ 'selected-button': selectedOption === 'time' }">Times
+                    </button>
+                    <div v-if="showSizesList">
+                        <button
+                                v-for="size in sizes"
+                                :key="size"
+                                @click="selectOption('size', size)"
+                                :class="{ 'selected-button': selectedOption === 'size' && selectedValue === size }"
+                        >
+                            [[ size ]]
+                        </button>
+                    </div>
+                    <div v-if="showTimesList">
+                        <button
+                                v-for="time in times"
+                                :key="time"
+                                @click="selectOption('time', time)"
+                                :class="{ 'selected-button' : selectedOption === 'time' && selectedValue === time }"
+                        >
+                            [[time]]
+                        </button>
+                    </div>
+                    <button @click="start">Start</button>
+                    <button @click="closeNSPopUp">Close</button>
+                </div>
+            </div>
+            <!--Vue End-->
+            <div id="never-sd">
+                {% for character in never_learned_chars %}
+                    <span>{{ character.character }}</span>
+                {% endfor %}
+            </div>
+        {% endif %}
     {% endif %}
-{% endif %}
 </div>
 <script>
     // console.log('{{list.id}}')
     let parentId = '{{ list.parent_list_id }}'
-    console.log('Parent Id: ',parentId)
+    console.log('Parent Id: ', parentId)
     let list_id = '{{ list.id }}'
     console.log('List Id: ', list_id)
 </script>
-<script type="module" src="{{ url_for('.static', filename='js/userCharLists.js') }}"></script>
+{#<script type="module" src="{{ url_for('.static', filename='js/userCharLists.js') }}"></script>#}
 <script type="module" src="{{ url_for('.static', filename='js/studyPopup.js') }}"></script>
 
 

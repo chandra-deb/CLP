@@ -102,51 +102,10 @@
 {#Modal#}
 
 <div id="app">
+    {% include 'modals/modal.html' %}
+
 
     <div v-if="isLoading" class="loading"><p>Loading...</p></div>
-    <div id="base-modal-container">
-        <div v-if="isDisplayCreateModal" class="bottom-sheet-container">
-            <div class="modal-sheet">
-                <div>
-                    <input v-model="inputValue" type="text">
-                    <p style="color: indianred" v-if="errorMsg">[[errorMsg]]</p>
-                </div>
-                <div class="con-btns">
-                    <button @click="closeCreateListModal">Cancel</button>
-                    <button @click="confirmCreateList">Create</button>
-                </div>
-            </div>
-        </div>
-
-        {#Delete Model#}
-        <div v-if="isDisplayDeleteModal" class="bottom-sheet-container">
-            <div class="modal-sheet">
-                <div>
-                    <p>To Delete, Specify the list name correctly.</p>
-                    <input v-model="inputValue" type="text">
-                    <p style="color: indianred" v-if="errorMsg">[[errorMsg]]</p>
-
-                </div>
-                <div class="con-btns">
-                    <button @click="toggleDeleteModal">Cancel</button>
-                    <button @click="confirmDelete">Confirm</button>
-                </div>
-            </div>
-        </div>
-
-        <div v-if="isDisplayEditModal" class="bottom-sheet-container">
-            <div class="modal-sheet">
-                <div>
-                    <input v-model="inputValue" type="text">
-                    <p style="color: indianred" v-if="errorMsg">[[errorMsg]]</p>
-                </div>
-                <div class="con-btns">
-                    <button @click="closeEditModal">Cancel</button>
-                    <button @click="confirmEdit">Update</button>
-                </div>
-            </div>
-        </div>
-    </div>
     {#End#}
 
     <h1>Character Lists</h1>
@@ -155,19 +114,9 @@
         <button @click="showCreateListModal">&#10010</button>
     </h2>
 
-    <ul>
-        {% for list in user_lists %}
-            <li>
-                <div class="list-card">
-                    <a href="{{ url_for('character.sublists', list_id=list.id) }}">{{ list.name }}</a>
-                    <div class="action-buttons">
-                        <button @click="()=>showEditModal('{{ list.name }}', '{{ list.id }}')">&#128393</button>
-                        <button @click="()=> showDeleteModal('{{ list.name }}', '{{ list.id }}')">&#10008</button>
-                    </div>
-                </div>
-            </li>
-        {% endfor %}
-    </ul>
+    {% with lists = user_lists %}
+        {% include 'parts/char_lists_part.html' %}
+    {% endwith %}
 
 </div>
 
@@ -175,12 +124,15 @@
 <hr>
 <hr>
 <h2>Pre Made Lists</h2>
-<ul>
-    {% for list in premade_lists %}
-        <li><a href="{{ url_for('character.sublists', list_id=list.id) }}">{{ list.name }}</a></li>
-    {% endfor %}
-</ul>
+{#<ul>#}
+{#    {% for list in premade_lists %}#}
+{#        <li><a href="{{ url_for('character.sublists', list_id=list.id) }}">{{ list.name }}</a></li>#}
+{#    {% endfor %}#}
+{#</ul>#}
 
+    {% with lists = premade_lists %}
+        {% include 'parts/char_lists_part.html' %}
+    {% endwith %}
 </body>
 </html>
 
