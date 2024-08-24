@@ -365,7 +365,8 @@ class CharacterList(db.Model):
 
     # Relationships
     character_mappings: so.Mapped[List['CharacterListMapping']] = so.relationship('CharacterListMapping',
-                                                                                  back_populates='character_list')
+                                                                                  back_populates='character_list',
+                                                                                  cascade='all, delete-orphan')
     user: so.Mapped[Optional['User']] = so.relationship('User', back_populates='character_lists')
     parent_list: so.Mapped[Optional['CharacterList']] = so.relationship('CharacterList', remote_side=[id],
                                                                         back_populates='child_lists')
@@ -373,7 +374,8 @@ class CharacterList(db.Model):
     characters: so.Mapped[List['ChineseCharacter']] = so.relationship('ChineseCharacter',
                                                                       secondary='character_list_mapping', viewonly=True)
     pinned_character_lists: so.Mapped[List['PinnedCharacterList']] = so.relationship('PinnedCharacterList',
-                                                                                     back_populates='character_list')
+                                                                                     back_populates='character_list',
+                                                                                     cascade='all, delete-orphan')
 
     def __repr__(self):
         return f'<CharacterList {self.name}>'
