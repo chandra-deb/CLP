@@ -1,15 +1,18 @@
-<!-- main.html -->
-{#{% include 'modals/modal.html' %}#}
-
-
 {% for char_list in lists %}
     <div class="list-card">
         <a href="{{ url_for('character.sublists', list_id=char_list.id) }}">{{ char_list.name }}</a>
-        {% if not char_list.is_admin_created and characters | length == 0 %}
-            <div class="action-buttons">
+        <div class="action-buttons">
+            {% if char_list in pinned_lists %}
+                <button @click="">Unpin</button>
+                {% else %}
+                <button @click="">Pin</button>
+            {% endif %}
+            {% if not char_list.is_admin_created and characters | length == 0 %}
+{#                <p> {{ is_pinned }} </p>#}
+                {#                <button v-else="" @click="">Pin</button>#}
                 <button @click="()=>showEditModal('{{ char_list.name }}', '{{ char_list.id }}')">&#128393</button>
                 <button @click="()=> showDeleteModal('{{ char_list.name }}', '{{ char_list.id }}')">&#10008</button>
-            </div>
-        {% endif %}
+            {% endif %}
+        </div>
     </div>
 {% endfor %}

@@ -11,6 +11,9 @@ class ListsService:
     def get_pinned_lists(self):
         return self.repository.get_user_pinned_lists()
 
+    def get_pinned_sub_lists(self, parent_list_id: int):
+        return self.repository.get_user_pinned_sub_lists(parent_list_id, user_id=current_user.id)
+
     def get_list_by_id(self, list_id: int) -> CharacterList:
         return self.repository.get_list_by_id(list_id)
 

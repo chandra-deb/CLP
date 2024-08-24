@@ -111,10 +111,15 @@
     <h1>Character Lists</h1>
 
     <h2>Pinned Lists</h2>
+{##}
+    {% set is_pinned = True %}
+    {% with lists = pinned_lists  %}
 
-    {% with lists = pinned_lists %}
         {% include 'parts/char_lists_part.html' %}
     {% endwith %}
+    {% set is_pinned = False %}
+{#{% set vars = {'lists': pinned_lists, 'is_pinned': 88, 'foo': 'bar', 'baz': 42} %}#}
+{#{% include 'parts/char_lists_part.html'%}#}
 
     <h2>My Lists
         <button @click="showCreateListModal">&#10010</button>

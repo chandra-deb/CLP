@@ -73,6 +73,24 @@ class ListsRepository:
         pinned_lists = [char_list_ref.character_list for char_list_ref in current_user.pinned_character_lists]
         return pinned_lists
 
+    def get_user_pinned_sub_lists(self, parent_list_id: int, user_id: int):
+        stmt = (select(PinnedCharacterList)
+                .where(
+            PinnedCharacterList.character_list_id == CharacterList.id,
+            CharacterList.parent_list_id == parent_list_id,
+            PinnedCharacterList.user_id == user_id
+        ).options(selectinload(PinnedCharacterList.character_list)))
+        result = self.db.session.scalars(stmt)
+        pinned_character_lists = result.all()
+        pinned_lists = [char_list_ref.character_list for char_list_ref in pinned_character_lists]
+        return pinned_lists
+
+
+    def pin_list(self, list_id: int):
+        new_pinned_list = PinnedCharacterList(character_list_id=list_id, user_id=current_user.id)
+        self.db.session.add(new_pinned_list)
+        self.db.session.commit()
+
     def get_top_level_premade_lists(self):
         top_level_premade_lists = self.db.session.scalars(
             select(CharacterList)
