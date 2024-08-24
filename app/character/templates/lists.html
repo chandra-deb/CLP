@@ -9,27 +9,163 @@
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script type="module" src="{{ url_for('.static', filename='js/userCharLists.js') }}"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-
-
-
     <title>Document</title>
+   <script>
+       let user_lists = '{{ user_lists }}'
+       console.log(user_lists)
+   </script>
+    <style>
+        .list-card {
+            background: cadetblue;
+            padding: 8px;
+            margin: 10px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .list-card a {
+            color: black;
+            text-decoration: none;
+        }
+
+        .list-card a:hover {
+            color: rebeccapurple;
+        }
+
+        .list-card .action-buttons button {
+            margin-left: 2px;
+        }
+
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5); /* Add a dark background to block clicks */
+            z-index: 1000; /* Make sure the modal sheet is on top of everything */
+            overflow-y: auto; /* Add this to make the modal sheet cover the whole page */
+            overflow-x: hidden; /* Add this to prevent horizontal scrolling */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-sheet {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            max-width: 480px;
+
+        }
+
+        .modal-sheet .con-btns {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .bottom-sheet-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5); /* Add a dark background to block clicks */
+            z-index: 1000; /* Make sure the modal sheet is on top of everything */
+            overflow-y: auto; /* Add this to make the modal sheet cover the whole page */
+            overflow-x: hidden; /* Add this to prevent horizontal scrolling */
+            display: flex;
+            justify-content: center;
+        }
+
+        .modal-sheet {
+            /* Make the modal sheet overlap the whole window */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+
+        }
+
+        .modal-sheet > div {
+            /* Style the inner content of the modal sheet */
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+    </style>
 </head>
 <body>
 
-<h1>Character Lists</h1>
-<div id="app">
-    <h2>My Lists <button @click="toggleInputBox">Create List</button></h2>
-        <span>[[listName]]</span>
-        <div v-if="isInputBoxOpen">
-            <input type="text" v-model="listName">
-            <button type="button" @click="createList">Ok</button>
-            <p style="color: indianred" v-if="errorMsg">[[errorMsg]]</p>
+{#Modal#}
 
+<div id="app">
+
+    <div v-if="isLoading" class="loading"><p>Loading...</p></div>
+    <div id="base-modal-container">
+        <div v-if="isDisplayCreateModal" class="bottom-sheet-container">
+            <div class="modal-sheet">
+                <div>
+                    <input v-model="inputValue" type="text">
+                    <p style="color: indianred" v-if="errorMsg">[[errorMsg]]</p>
+                </div>
+                <div class="con-btns">
+                    <button @click="closeCreateListModal">Cancel</button>
+                    <button @click="confirmCreateList">Create</button>
+                </div>
+            </div>
         </div>
+
+        {#Delete Model#}
+        <div v-if="isDisplayDeleteModal" class="bottom-sheet-container">
+            <div class="modal-sheet">
+                <div>
+                    <p>To Delete, Specify the list name correctly.</p>
+                    <input v-model="inputValue" type="text">
+                    <p style="color: indianred" v-if="errorMsg">[[errorMsg]]</p>
+
+                </div>
+                <div class="con-btns">
+                    <button @click="toggleDeleteModal">Cancel</button>
+                    <button @click="confirmDelete">Confirm</button>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="isDisplayEditModal" class="bottom-sheet-container">
+            <div class="modal-sheet">
+                <div>
+                    <input v-model="inputValue" type="text">
+                    <p style="color: indianred" v-if="errorMsg">[[errorMsg]]</p>
+                </div>
+                <div class="con-btns">
+                    <button @click="closeEditModal">Cancel</button>
+                    <button @click="confirmEdit">Update</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {#End#}
+
+    <h1>Character Lists</h1>
+
+    <h2>My Lists
+        <button @click="showCreateListModal">&#10010</button>
+    </h2>
 
     <ul>
         {% for list in user_lists %}
-            <li><a href="{{ url_for('character.sublists', list_id=list.id) }}">{{ list.name }}</a></li>
+            <li>
+                <div class="list-card">
+                    <a href="{{ url_for('character.sublists', list_id=list.id) }}">{{ list.name }}</a>
+                    <div class="action-buttons">
+                        <button @click="()=>showEditModal('{{ list.name }}', '{{ list.id }}')">&#128393</button>
+                        <button @click="()=> showDeleteModal('{{ list.name }}', '{{ list.id }}')">&#10008</button>
+                    </div>
+                </div>
+            </li>
         {% endfor %}
     </ul>
 
