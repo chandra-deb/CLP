@@ -13,6 +13,31 @@ let grabbedListId = NaN
 const inputValue = ref('')
 const isLoading = ref(false)
 
+function pinList(listId){
+    console.log(listId, 'From pinLIst')
+    try {
+        listId = parseInt(listId)
+    } catch (e) {
+        console.error(e)
+    }
+    const data = {
+        listId: listId,
+    }
+    isLoading.value = true
+    axios.post('/character/pin_list', data)
+        .then(function (response) {
+            console.log(response.data);
+            window.location.reload()
+        })
+        .catch(function (error) {
+            console.log(error);
+            errorMsg.value = error
+        });
+
+}
+function unpinList(listId){
+
+}
 
 function toggleInputBox() {
     isInputBoxOpen.value = !isInputBoxOpen.value;
@@ -173,6 +198,8 @@ const App = {
             showCreateListModal,
             closeCreateListModal,
             confirmCreateList,
+            pinList,
+            unpinList,
         }
     },
 

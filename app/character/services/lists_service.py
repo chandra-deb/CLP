@@ -12,6 +12,9 @@ class ListsService:
     def __init__(self, lists_repository: ListsRepository):
         self.repository = lists_repository
 
+    def pin_list(self, list_id):
+        self.repository.pin_list(list_id)
+
     def get_pinned_lists(self):
         return self.repository.get_user_pinned_lists()
 
