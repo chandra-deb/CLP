@@ -86,11 +86,21 @@ class ListsRepository:
         pinned_lists = [char_list_ref.character_list for char_list_ref in pinned_character_lists]
         return pinned_lists
 
-
     def pin_list(self, list_id: int):
         new_pinned_list = PinnedCharacterList(character_list_id=list_id, user_id=current_user.id)
         self.db.session.add(new_pinned_list)
         self.db.session.commit()
+
+    def unpin_list(self, list_id: int):
+        pinned_lists_ref: List[PinnedCharacterList] = current_user.pinned_character_lists
+        pinned_ref_id = None
+        for ref in pinned_lists_ref:
+            if ref.character_list.id == list_id:
+                pinned_ref_id = ref.id
+                break
+        self.db.session.query(PinnedCharacterList).filter_by(id=pinned_ref_id).delete()
+        self.db.session.commit()
+
 
     def get_top_level_premade_lists(self):
         top_level_premade_lists = self.db.session.scalars(

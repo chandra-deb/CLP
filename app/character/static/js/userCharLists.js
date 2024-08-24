@@ -36,6 +36,25 @@ function pinList(listId){
 
 }
 function unpinList(listId){
+        console.log(listId, 'From pinLIst')
+    try {
+        listId = parseInt(listId)
+    } catch (e) {
+        console.error(e)
+    }
+    const data = {
+        listId: listId,
+    }
+    isLoading.value = true
+    axios.post('/character/unpin_list', data)
+        .then(function (response) {
+            console.log(response.data);
+            window.location.reload()
+        })
+        .catch(function (error) {
+            console.log(error);
+            errorMsg.value = error
+        });
 
 }
 
