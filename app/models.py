@@ -412,6 +412,7 @@ class CharacterList(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     name: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, unique=False, nullable=False)
     is_admin_created: so.Mapped[bool] = so.mapped_column(sa.Boolean, default=False)
+    is_pinned: so.Mapped[bool] = so.mapped_column(sa.Boolean, index=True, default=False)
     user_id: so.Mapped[Optional[int]] = so.mapped_column(sa.ForeignKey('user.id'), nullable=True)
     parent_list_id: so.Mapped[Optional[int]] = so.mapped_column(sa.ForeignKey('character_list.id'), nullable=True)
 
