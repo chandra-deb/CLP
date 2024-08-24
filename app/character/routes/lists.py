@@ -10,7 +10,9 @@ from app.character.services import lists_service
 def lists():
     top_level_user_lists = lists_service.get_top_level_user_lists()
     top_level_premade_lists = lists_service.get_top_level_premade_lists()
+    pinned_lists = lists_service.get_pinned_lists()
 
-    return render_template('lists.html', user_lists=top_level_user_lists, premade_lists=top_level_premade_lists)
+    return render_template('lists.html', user_lists=top_level_user_lists, premade_lists=top_level_premade_lists,
+                           pinned_lists=pinned_lists)
 
 

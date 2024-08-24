@@ -10,10 +10,10 @@
     <script type="module" src="{{ url_for('.static', filename='js/userCharLists.js') }}"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <title>Document</title>
-   <script>
-       let user_lists = '{{ user_lists }}'
-       console.log(user_lists)
-   </script>
+    <script>
+        let user_lists = '{{ user_lists }}'
+        console.log(user_lists)
+    </script>
     <style>
         .list-card {
             background: cadetblue;
@@ -110,6 +110,12 @@
 
     <h1>Character Lists</h1>
 
+    <h2>Pinned Lists</h2>
+
+    {% with lists = pinned_lists %}
+        {% include 'parts/char_lists_part.html' %}
+    {% endwith %}
+
     <h2>My Lists
         <button @click="showCreateListModal">&#10010</button>
     </h2>
@@ -124,15 +130,9 @@
 <hr>
 <hr>
 <h2>Pre Made Lists</h2>
-{#<ul>#}
-{#    {% for list in premade_lists %}#}
-{#        <li><a href="{{ url_for('character.sublists', list_id=list.id) }}">{{ list.name }}</a></li>#}
-{#    {% endfor %}#}
-{#</ul>#}
-
-    {% with lists = premade_lists %}
-        {% include 'parts/char_lists_part.html' %}
-    {% endwith %}
+{% with lists = premade_lists %}
+    {% include 'parts/char_lists_part.html' %}
+{% endwith %}
 </body>
 </html>
 

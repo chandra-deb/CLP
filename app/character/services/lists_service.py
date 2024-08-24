@@ -8,6 +8,9 @@ class ListsService:
     def __init__(self, lists_repository: ListsRepository):
         self.repository = lists_repository
 
+    def get_pinned_lists(self):
+        return self.repository.get_user_pinned_lists()
+
     def get_list_by_id(self, list_id: int) -> CharacterList:
         return self.repository.get_list_by_id(list_id)
 
