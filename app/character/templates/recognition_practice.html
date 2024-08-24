@@ -108,7 +108,9 @@
     <div id="recognitionPractice">
         <div v-if="!practiceDone">
            <div class="progress">
-            <span>[[ studiedChars.length ]]/[[ characters.length ]] characters studied</span>
+               <span v-if="timeRemaining">[[ timeRemaining ]]</span>
+
+            <span v-else>[[ studiedChars.length ]]/[[ characters.length ]] characters studied</span>
             <div id="progress-bar">
             <div id="progress-visible" :style="{ 'width': progressPercent + '%' }"></div>
             </div>
@@ -137,6 +139,7 @@
     </div>
 <script>
     let charactersDataJson = '{{ characters | tojson }}'
+    let timeLength = '{{ time_length }}'
 </script>
 <script type="module" src="{{ url_for('.static', filename='js/recognitionPractice.js') }}"></script>
 </body>

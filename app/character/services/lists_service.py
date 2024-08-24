@@ -1,7 +1,11 @@
+import math
+from datetime import datetime
 from typing import List
 
+from flask_login import current_user
+
 from app.character.repositories.lists_repository import ListsRepository
-from app.models import CharacterList, ChineseCharacter
+from app.models import CharacterList, ChineseCharacter, UserRecognitionProgress
 
 
 class ListsService:
@@ -38,16 +42,17 @@ class ListsService:
     def get_top_level_premade_lists(self) -> list[CharacterList]:
         return self.repository.get_top_level_premade_lists()
 
-    def get_never_studied_chars_of_list(self, list_id: int):
-        character_list = self.get_list_by_id(list_id)
-        filtered_characters = [character for character in character_list.characters
-                               if not character.recognition_progress]
-        return filtered_characters
+    def get_never_studied_chars_of_list(self, list_id: int, limit: int | None = None) -> list[ChineseCharacter]:
+        return self.repository.get_unstudied_chars(list_id, current_user.id, limit=limit)
+        # character_list = self.get_list_by_id(list_id)
+        # filtered_characters = [character for character in character_list.characters
+        #                        if not character.recognition_progress]
+        # return filtered_characters
 
     __MEMORY_THRESHOLD = 0.5
 
-    def get_strong_weak_chars(self, user_id: int, list_id: int):
-        characters_with_memory_strength = self.repository.get_characters_with_memory_strength(user_id, list_id)
+    def get_strong_weak_chars(self, list_id: int):
+        characters_with_memory_strength = self.repository.get_characters_with_memory_strength(current_user.id, list_id)
         memory_strengths = [(urp, urp.calculate_memory_strength()) for urp in characters_with_memory_strength]
 
         strong_characters = [urp.character for urp, strength in memory_strengths if
@@ -57,3 +62,31 @@ class ListsService:
                            strength < self.__MEMORY_THRESHOLD]
 
         return strong_characters, weak_characters
+
+    def get_strong_chars_of_list(self, list_id: int, limit: int | None = None) -> list[ChineseCharacter]:
+        characters_with_memory_strength = self.repository.get_characters_with_memory_strength(current_user.id, list_id)
+        memory_strengths = [(urp, urp.calculate_memory_strength()) for urp in characters_with_memory_strength]
+        strong_characters = [urp.character for urp, strength in memory_strengths if
+                             strength >= self.__MEMORY_THRESHOLD]
+        if limit is not None:
+            return strong_characters[:int(limit)]
+        return strong_characters
+
+    def get_weak_chars_of_list(self, list_id: int, limit: int | None = None) -> list[ChineseCharacter]:
+        characters_with_memory_strength = self.repository.get_characters_with_memory_strength(current_user.id, list_id)
+
+        memory_strengths = [(urp, urp.calculate_memory_strength()) for urp in characters_with_memory_strength]
+        weak_characters = [urp.character for urp, strength in memory_strengths if
+                           strength < self.__MEMORY_THRESHOLD]
+        if limit is not None:
+            return weak_characters[:int(limit)]
+        return weak_characters
+
+    def get_ten_never_studied_chars(self, list_id: int):
+        characters = self.get_never_studied_chars_of_list(list_id)
+        return characters[:10]
+
+    # def get_never_studied_chars(self, size: int,  list_id: int):
+
+    def update_memory_strength(self, updated_char_details: list[{}]) -> None:
+        self.repository.update_memory_strength(updated_char_details)
