@@ -2,6 +2,8 @@ console.log(charactersDataJson)
 const recognitionPractice = Vue.createApp({
   data() {
     return {
+        timeLength: parseInt(timeLength),
+        timeRemaining: NaN,
       characters: JSON.parse(charactersDataJson), // array of character objects from backend
       studiedChars: [],
         progressPercent: 0,
@@ -22,15 +24,59 @@ const recognitionPractice = Vue.createApp({
       if(this.currentCharacter.isCorrect){
           this.showDetailsVisible = false
       }
+
     }
     ,
+    created(){
+      if(!isNaN(this.timeLength)){
+          this.countdownTimer(timeLength, this.submitAnswers)
+      }
+    },
   beforeMount() {
+
     this.characters = [...this.characters.map(value => {
       return {...value, isCorrect:false, charState: 'new'}
     })]
     this.patternedChars = this.generatePattern(this.characters, 3)
 },
   methods: {
+      countdownTimer(minutes, callback) {
+  let totalSeconds = minutes * 60;
+  let intervalId = setInterval(() => {
+    let secondsRemaining = totalSeconds;
+    let minutesRemaining = Math.floor(totalSeconds / 60);
+    let seconds = totalSeconds % 60;
+     this.timeRemaining = minutesRemaining >= 0 ? `${minutesRemaining}:${String(seconds).padStart(2, '0')}` : `${seconds} seconds`;
+    this.progressPercent = ((minutes * 60 - secondsRemaining) / (minutes * 60)) * 100;
+    console.log(totalSeconds, secondsRemaining)
+    console.log(this.progressPercent);
+    // this.progressPercent = this.progressPercent.toFixed(2)
+    console.log(`Time remaining: ${this.timeRemaining}`);
+    // console.log(`Progress: ${this.progressPercent.toFixed(2)}%`);
+    totalSeconds--;
+    if (totalSeconds < 0) {
+      clearInterval(intervalId);
+      callback();
+    }
+  }, 1000); // update every 1 second
+},
+//        countdownTimer(minutes, callback) {
+//   let totalSeconds = minutes * 60;
+//   let intervalId = setInterval(() => {
+//     let secondsRemaining = totalSeconds;
+//     let minutesRemaining = Math.floor(totalSeconds / 60);
+//     let seconds = totalSeconds % 60;
+//     this.timeRemaining = minutesRemaining > 0 ? `${minutesRemaining}:${String(seconds).padStart(2, '0')}` : `${seconds} seconds`;
+//     console.log(`Time remaining: ${this.timeRemaining}`);
+//     totalSeconds--;
+//     this.progressPercent = (to / this.characters.length) * 100;
+//
+//     if (totalSeconds <= 0) {
+//       clearInterval(intervalId);
+//       callback();
+//     }
+//   }, 1000); // update every 1 second
+// },
 //        generatePattern(arr) {
 //   const result = [];
 //   for (let i = 0; i < arr.length; i++) {
@@ -71,13 +117,14 @@ const recognitionPractice = Vue.createApp({
  nextCharacter() {
      this.currentCharacterIndex++
      if(this.currentCharacterIndex === this.patternedChars.length){
-         this.practiceDone = true
          this.submitAnswers()
      }
 
    if(!this.studiedChars.includes(this.patternedChars[this.currentCharacterIndex])){
       this.studiedChars.push(this.currentCharacter);
-       this.progressPercent = (this.studiedChars.length / this.characters.length) * 100;
+      if(isNaN(this.timeLength)){
+          this.progressPercent = (this.studiedChars.length / this.characters.length) * 100;
+      }
    }
    console.log(this.studiedChars)
 
@@ -114,6 +161,7 @@ const recognitionPractice = Vue.createApp({
     },
 
     submitAnswers() {
+          this.practiceDone = true
         let dataToSend = this.studiedChars.map(value => {
             return {character_id: value.id, is_correct:value.isCorrect}
         })

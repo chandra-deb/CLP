@@ -7,3 +7,5 @@ app/auth/forms/__pycache__
 app/auth/routes/__pycache__
 
 
+
+.idea/

@@ -1,10 +1,62 @@
-# from app import app, db
-# from app.models import User, ChineseCharacter, UserCharacterStatus, CharacterList, UserNote
-#
-# # Create the application instance
-#
-# with app.app_context():
-#     # Dummy data for User
+from random import choice
+
+from sqlalchemy import select
+
+from app import app, db
+from app.models import User, ChineseCharacter, UserCharacterStatus, CharacterList, UserNote
+
+# Create the application instance
+
+with app.app_context():
+
+    list_id = 80  # Replace with the ID of the list you want to get characters from
+    list_characters = db.session.scalars(
+        select(ChineseCharacter).join(CharacterList.characters).where(CharacterList.id == list_id)).all()
+
+    for character in list_characters:
+        print(f"Character: {character.character}, Pinyin: {character.pinyin}")
+    # Create some Chinese characters
+    # char1 = ChineseCharacter(character="好", pinyin="hao3")
+    # char2 = ChineseCharacter(character="人", pinyin="ren2")
+    # char3 = ChineseCharacter(character="大", pinyin="da4")
+    # char4 = ChineseCharacter(character="小", pinyin="xiao3")
+    # char5 = ChineseCharacter(character="水", pinyin="shui3")
+    #
+    # db.session.add(char1)
+    # db.session.add(char2)
+    # db.session.add(char3)
+    # db.session.add(char4)
+    # db.session.add(char5)
+
+    # Create premade lists
+    # list1 = CharacterList(name="HSK 4", is_admin_created=True)
+    # list2 = CharacterList(name="HSK 5", is_admin_created=True)
+    # list3 = CharacterList(name="HSK 6", is_admin_created=True)
+    #
+    # all_characters = db.session.scalars(select(ChineseCharacter)).all()
+    #
+    # # Add characters to lists
+    # list1.characters.append(choice(all_characters))
+    # list1.characters.append(choice(all_characters))
+    #
+    # list2.characters.append(choice(all_characters))
+    # list2.characters.append(choice(all_characters))
+    #
+    # list3.characters.append(choice(all_characters))
+    # list3.characters.append(choice(all_characters))
+    # list3.characters.append(choice(all_characters))
+    #
+    # # Add lists to the session
+    # db.session.add(list1)
+    # db.session.add(list2)
+    # db.session.add(list3)
+    #
+    # # Commit the changes
+    # db.session.commit()
+    #
+    # print("Done")
+
+    # Dummy data for User
 #     users = [
 #         User(username=f'user{i}', email=f'user{i}@example.com', password_hash='hashedpassword')
 #         for i in range(1, 11)
@@ -18,13 +70,14 @@
 #
 #     # Dummy data for CharacterList
 #     character_lists = [
-#         CharacterList(name=f'List {i}', created_by_admin=(i % 2 == 0))  # Alternating between admin and user
+#         CharacterList(name=f'List {i}', is_admin_created=(i % 2 == 0))  # Alternating between admin and user
 #         for i in range(1, 11)
 #     ]
 #
 #     # Dummy data for UserCharacterStatus
+#     s = ['mastered', 'assumed', 'learning']
 #     user_character_statuses = [
-#         UserCharacterStatus(user_id=(i % 10) + 1, character_id=(i % 10) + 1, status='Learned')
+#         UserCharacterStatus(user_id=(i % 10) + 1, character_id=(i % 10) + 1, status=choice(s))
 #         for i in range(1, 11)
 #     ]
 #
@@ -73,18 +126,33 @@
 #
 #
 #
-class UserNote(db.Model):
-    __tablename__ = 'user_note'
-
-    id: so.Mapped[int] = so.mapped_column(primary_key=True)
-    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'))
-    character_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('chinese_character.id'))
-    note: so.Mapped[str] = so.mapped_column(sa.String(200), nullable=False)
-
-    # Relationships
-    user: so.Mapped['User'] = so.relationship('User', back_populates='notes')
-    character: so.Mapped['ChineseCharacter'] = so.relationship('ChineseCharacter', back_populates='notes')
-
-    def __repr__(self):
-        return f'<UserNote {self.user_id}-{self.character_id}>'
-
+# Create some Chinese characters
+# char1 = ChineseCharacter(character="", pinyin="hao3")
+# char2 = ChineseCharacter(character="", pinyin="ren2")
+# char3 = ChineseCharacter(character="", pinyin="da4")
+# char4 = ChineseCharacter(character="", pinyin="xiao3")
+# char5 = ChineseCharacter(character="", pinyin="shui3")
+#
+# # Create premade lists
+# list1 = CharacterList(name="List 1", is_admin_created=True)
+# list2 = CharacterList(name="List 2", is_admin_created=True)
+# list3 = CharacterList(name="List 3", is_admin_created=True)
+#
+# # Add characters to lists
+# list1.characters.append(char1)
+# list1.characters.append(char2)
+#
+# list2.characters.append(char2)
+# list2.characters.append(char3)
+#
+# list3.characters.append(char1)
+# list3.characters.append(char4)
+# list3.characters.append(char5)
+#
+# # Add lists to the session
+# db.session.add(list1)
+# db.session.add(list2)
+# db.session.add(list3)
+#
+# # Commit the changes
+# db.session.commit()

@@ -1,0 +1,8 @@
+### GET request to example server
+#telnet gaia.cs.umass.edu 80
+GET / HTTHTTP/2
+Host: google.com
+
+
+
+###

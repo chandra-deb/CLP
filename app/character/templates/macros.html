@@ -1,0 +1,18 @@
+{% macro list_lists(lists, list_path) %}
+  <ul>
+  {% for list in lists %}
+    <li><a href="{{ url_for('character.character_list', list_path=list_path + '/' + list.name) }}">{{ list.name }}</a>
+    {% if list.child_lists %}
+      {{ list_lists(list.child_lists, list_path + '/' + list.name) }}
+    {% elif list.characters %}
+      <h2>{{ list_path }}/{{ list.name }}</h2>
+      <ul>
+      {% for character in list.characters %}
+        <li>{{ character.character }} ({{ character.pinyin }})</li>
+      {% endfor %}
+      </ul>
+    {% endif %}
+    </li>
+  {% endfor %}
+  </ul>
+{% endmacro %}
