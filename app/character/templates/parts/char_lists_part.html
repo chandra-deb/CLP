@@ -1,6 +1,6 @@
 {% for char_list in lists %}
     <div class="list-card">
-        <a href="{{ url_for('character.sublists', list_id=char_list.id) }}">{{ char_list.name }}</a>
+        <a href="{{ url_for('character.sublists', list_id=char_list.id) }}"><pre style="font-family: 'Open Sans', sans-serif;margin: 0">{{ char_list.name }}</pre></a>
         <div class="action-buttons">
             {% if char_list in pinned_lists %}
                 <button @click="()=>unpinList('{{char_list.id}}')">Unpin</button>
