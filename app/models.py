@@ -38,6 +38,8 @@ class User(UserMixin, db.Model):
                                                                                back_populates='user')
     notes: so.Mapped[List['UserNote']] = so.relationship('UserNote', back_populates='user')
     character_lists: so.Mapped[List['CharacterList']] = so.relationship('CharacterList', back_populates='user')
+    pinned_character_lists: so.Mapped[List['PinnedCharacterList']] = so.relationship('PinnedCharacterList',
+                                                                                     back_populates='user')
 
     def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)
@@ -65,9 +67,16 @@ class ChineseCharacter(db.Model):
     recognition_progress: so.Mapped[List['UserRecognitionProgress']] = so.relationship('UserRecognitionProgress',
                                                                                        lazy='joined')
 
-
     def __repr__(self):
         return f'<ChineseCharacter {self.character}>'
+
+    def to_json(self):
+        return {
+            'id': self.id,
+            'character': self.character,
+            'pinyin': self.pinyin,
+            'meaning': self.meaning,
+        }
 
 
 # class UserCharacterProgression(db.Model):
@@ -82,7 +91,7 @@ class ChineseCharacter(db.Model):
 #     status_in_writing = so.mapped_column(sa.String(64), index=True, unique=True, nullable=False)
 #
 
-#----------Replace BY -----------#
+# ----------Replace BY -----------#
 # class UserCharacterStatus(db.Model):
 #     __tablename__ = 'user_character_status'
 #
@@ -99,7 +108,7 @@ class ChineseCharacter(db.Model):
 #         return f'<UserCharacterStatus {self.status}>'
 
 
-#---------------THESE------------------#
+# ---------------THESE------------------#
 
 class UserRecognitionProgress(db.Model):
     __tablename__ = 'user_recognition_progress'
@@ -141,99 +150,41 @@ class UserRecognitionProgress(db.Model):
         # print(f'Now Strength of {self.character.character} is {self.memory_strength}')
         return new_memory_strength
 
-    def update_memory_strength(self, correct: bool) -> None:
-        now = datetime.now()
-        latest_memory_strength = self.calculate_memory_strength()
-
-        if correct:
-            if latest_memory_strength < 0.5:
-                latest_memory_strength = 1.0
-            else:
-                latest_memory_strength += 0.1
-            self.last_practice = now
-        else:
-            if latest_memory_strength > 0.5:
-                latest_memory_strength -= 0.1
-            else:
-                latest_memory_strength = 0.0
-            self.last_practice = now
-
-        # Update the memory strength attribute
-        self.memory_strength = latest_memory_strength
-
-        # Calculate the next practice date based on the memory strength
-        if latest_memory_strength < 1.0:
-            self.interval = 1
-        elif latest_memory_strength < 2.0:
-            self.interval = 3
-        elif latest_memory_strength < 3.0:
-            self.interval = 7
-        elif latest_memory_strength < 4.0:
-            self.interval = 14
-        else:
-            self.interval = 30
-
-        self.next_practice = self.last_practice + timedelta(days=self.interval)
-
-        db.session.commit()
-
-
-
-
-
-# class UserRecognitionProgress(db.Model):
-#     __tablename__ = 'user_recognition_progress'
-#     __table_args__ = (UniqueConstraint('user_id', 'character_id', name='unique_user_recognition'),)
-#
-#     id: so.Mapped[int] = so.mapped_column(primary_key=True)
-#     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'))
-#     character_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('chinese_character.id'))
-#     status: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, unique=True, nullable=False,
-#                                               default='never_studied')
-#     memory_strength: so.Mapped[float] = so.mapped_column(default=0.0)
-#     last_practice: so.Mapped[datetime] = so.mapped_column(default=datetime.now())
-#     next_practice: so.Mapped[datetime] = so.mapped_column(default=datetime.now())
-#     interval: so.Mapped[int] = so.mapped_column(default=1)
-#
-#     # Relationships
-#     user: so.Mapped['User'] = so.relationship('User', back_populates='recognition_progress')
-#     character: so.Mapped['ChineseCharacter'] = so.relationship('ChineseCharacter')
-#
-#     def update_memory_strength(self, correct: bool) -> None:
-#         """
-#         Update the memory strength based on the spaced repetition algorithm.
-#
-#         :param correct: Whether the user answered correctly or not
-#         """
-#         now = datetime.now()
-#         if correct:
-#             if self.memory_strength < 0.5:
-#                 self.memory_strength = 1.0
-#             else:
-#                 self.memory_strength += 0.1
-#             self.last_practice = now
-#         else:
-#             if self.memory_strength > 0.5:
-#                 self.memory_strength -= 0.1
-#             else:
-#                 self.memory_strength = 0.0
-#             self.last_practice = now
-#
-#         # Calculate the next practice date based on the memory strength
-#         if self.memory_strength < 1.0:
-#             self.interval = 1
-#         elif self.memory_strength < 2.0:
-#             self.interval = 3
-#         elif self.memory_strength < 3.0:
-#             self.interval = 7
-#         elif self.memory_strength < 4.0:
-#             self.interval = 14
-#         else:
-#             self.interval = 30
-#
-#         self.next_practice = self.last_practice + timedelta(days=self.interval)
-#
-#         db.session.commit()
+    # def update_memory_strength(self, correct: bool) -> None:
+    #     now = datetime.now()
+    #     latest_memory_strength = self.calculate_memory_strength()
+    #
+    #     if correct:
+    #         if latest_memory_strength < 0.5:
+    #             latest_memory_strength = 1.0
+    #         else:
+    #             latest_memory_strength += 0.1
+    #         self.last_practice = now
+    #     else:
+    #         if latest_memory_strength > 0.5:
+    #             latest_memory_strength -= 0.1
+    #         else:
+    #             latest_memory_strength = 0.0
+    #         self.last_practice = now
+    #
+    #     # Update the memory strength attribute
+    #     self.memory_strength = latest_memory_strength
+    #
+    #     # Calculate the next practice date based on the memory strength
+    #     if latest_memory_strength < 1.0:
+    #         self.interval = 1
+    #     elif latest_memory_strength < 2.0:
+    #         self.interval = 3
+    #     elif latest_memory_strength < 3.0:
+    #         self.interval = 7
+    #     elif latest_memory_strength < 4.0:
+    #         self.interval = 14
+    #     else:
+    #         self.interval = 30
+    #
+    #     self.next_practice = self.last_practice + timedelta(days=self.interval)
+    #
+    #     db.session.commit()
 
 
 class UserPinyinProgress(db.Model):
@@ -289,9 +240,6 @@ class UserPinyinProgress(db.Model):
         self.next_practice = self.last_practice + timedelta(days=self.interval)
 
         db.session.commit()
-
-
-
 
 
 class UserMeaningProgress(db.Model):
@@ -404,7 +352,7 @@ class UserWritingProgress(db.Model):
         db.session.commit()
 
 
-#----------End-----------#
+# ----------End-----------#
 
 class CharacterList(db.Model):
     __tablename__ = 'character_list'
@@ -412,7 +360,6 @@ class CharacterList(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     name: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, unique=False, nullable=False)
     is_admin_created: so.Mapped[bool] = so.mapped_column(sa.Boolean, default=False)
-    is_pinned: so.Mapped[bool] = so.mapped_column(sa.Boolean, index=True, default=False)
     user_id: so.Mapped[Optional[int]] = so.mapped_column(sa.ForeignKey('user.id'), nullable=True)
     parent_list_id: so.Mapped[Optional[int]] = so.mapped_column(sa.ForeignKey('character_list.id'), nullable=True)
 
@@ -425,9 +372,22 @@ class CharacterList(db.Model):
     child_lists: so.Mapped[List['CharacterList']] = so.relationship('CharacterList', back_populates='parent_list')
     characters: so.Mapped[List['ChineseCharacter']] = so.relationship('ChineseCharacter',
                                                                       secondary='character_list_mapping', viewonly=True)
+    pinned_character_lists: so.Mapped[List['PinnedCharacterList']] = so.relationship('PinnedCharacterList',
+                                                                                     back_populates='character_list')
 
     def __repr__(self):
         return f'<CharacterList {self.name}>'
+
+
+class PinnedCharacterList(db.Model):
+    __tablename__ = 'pinned_character_list'
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+
+#     Relationships
+    user: so.Mapped[Optional['User']] = so.relationship('User', back_populates='pinned_character_lists')
+    character_list: so.Mapped[Optional['CharacterList']] = so.relationship('CharacterList',
+                                                                           back_populates='pinned_character_lists')
+
 
 
 class CharacterListMapping(db.Model):
@@ -459,7 +419,6 @@ class UserNote(db.Model):
 
     def __repr__(self):
         return f'<UserNote {self.user_id}-{self.character_id}>'
-
 
 # def update_memory_strength(self, correct: bool) -> None:
 #     """
