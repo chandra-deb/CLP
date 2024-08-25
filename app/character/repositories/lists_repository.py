@@ -34,9 +34,28 @@ class ListsRepository:
         self.db.session.commit()
         return character_list
 
+    def __delete_with_child_lists(self, character_list: CharacterList):
+        """
+         Delete this CharacterList and all its child lists.
+         """
+        # Delete child lists recursively
+        for child_list in character_list.child_lists:
+            self.__delete_with_child_lists(child_list)
+
+        # Delete pinned character lists
+        for pinned_list in character_list.pinned_character_lists:
+            self.db.session.delete(pinned_list)
+
+        # Delete character mappings
+        for mapping in character_list.character_mappings:
+            self.db.session.delete(mapping)
+
+        # Finally, delete this character list
+        self.db.session.delete(character_list)
+
     def delete_list(self, list_id: int):
-        self.unpin_list(list_id)
-        self.db.session.query(CharacterList).filter_by(id=list_id).delete()
+        character_list = self.get_list_by_id(list_id)
+        self.__delete_with_child_lists(character_list)
         self.db.session.commit()
 
     def update_list_name(self, list_id: int, name: str):
@@ -101,8 +120,6 @@ class ListsRepository:
                 self.db.session.query(PinnedCharacterList).filter_by(id=pinned_ref_id).delete()
                 self.db.session.commit()
                 break
-
-
 
     def get_top_level_premade_lists(self):
         top_level_premade_lists = self.db.session.scalars(
