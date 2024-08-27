@@ -10,6 +10,7 @@ from hsk_6 import hsk_6
 
 dictionary = HanziDictionary()
 surname_definition_count = 0
+surname_definitions = []
 real_definitions_to_save = []
 not_found_characters = []
 copied_definition_count = 0
@@ -24,6 +25,7 @@ for hsk in hsks:
                 if definition not in real_definitions_to_save:
                     english: str = definition['definition']
                     if english.startswith('surname'):
+                        surname_definitions.append(definition)
                         surname_definition_count += 1
                     else:
                         real_definitions_to_save.append(definition)
