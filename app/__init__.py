@@ -2,6 +2,7 @@ from flask import Flask, render_template, redirect, url_for
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, current_user
+from hanzipy.dictionary import HanziDictionary
 
 from config import Config
 
@@ -10,6 +11,9 @@ app.config.from_object(Config)
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 login = LoginManager(app)
+
+
+# dictionary = HanziDictionary()
 
 from app import models
 
@@ -22,6 +26,7 @@ app.register_blueprint(account)
 
 from app.character import character
 app.register_blueprint(character)
+
 
 
 @app.route('/')
