@@ -3,5 +3,5 @@ from app.character.routes.sublists import sublists
 from app.character.routes.reading_practice import reading_practice
 from app.character.routes.study_never_studied import sns
 from app.character.routes.recognition_practice import recognition_practice
-
+from app.character.routes.add_chars_to_list import add_chars_to_list
 
