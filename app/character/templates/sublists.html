@@ -129,10 +129,15 @@
     {% include 'modals/modal.html' %}
 
     <h2>{{ list.name }}
-        {% if not list.is_admin_created and characters | length == 0 %}
-            <button @click="showCreateListModal">&#10010</button>
-
+        {% if not list.is_admin_created and characters | length == 0 and child_lists | length == 0 %}
+            <button @click="showCreateListModal">Add List</button>
+            <a href="{{ url_for('character.add_chars_to_list', list_id=list.id) }}">Add Characters</a>
+        {% elif not list.is_admin_created and child_lists | length == 0 %}
+            <a href="{{ url_for('character.add_chars_to_list', list_id=list.id) }}">Add Characters</a>
+        {% else %}
+            <button @click="showCreateListModal">Add List</button>
         {% endif %}
+
     </h2>
 
     {% with lists = child_lists %}

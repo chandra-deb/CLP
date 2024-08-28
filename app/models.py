@@ -4,6 +4,7 @@ from typing import Optional, List
 import sqlalchemy as sa
 import sqlalchemy.orm as so
 from sqlalchemy import DateTime, UniqueConstraint
+from sqlalchemy.orm import remote, foreign
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 
@@ -55,7 +56,7 @@ class ChineseCharacter(db.Model):
     __tablename__ = 'chinese_character'
 
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
-    character: so.Mapped[str] = so.mapped_column(sa.String(8), index=True, unique=True, nullable=False)
+    character: so.Mapped[str] = so.mapped_column(sa.String(8), index=True, unique=False, nullable=False)
     pinyin: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, nullable=False)
 
     meaning: so.Mapped[str] = so.mapped_column(sa.String(256), index=True, nullable=True)
@@ -368,9 +369,11 @@ class CharacterList(db.Model):
                                                                                   back_populates='character_list',
                                                                                   cascade='all, delete-orphan')
     user: so.Mapped[Optional['User']] = so.relationship('User', back_populates='character_lists')
+
     parent_list: so.Mapped[Optional['CharacterList']] = so.relationship('CharacterList', remote_side=[id],
                                                                         back_populates='child_lists')
-    child_lists: so.Mapped[List['CharacterList']] = so.relationship('CharacterList', back_populates='parent_list')
+    child_lists: so.Mapped[List['CharacterList']] = so.relationship('CharacterList', back_populates='parent_list',
+                                                                    cascade='all, delete', passive_deletes=True)
     characters: so.Mapped[List['ChineseCharacter']] = so.relationship('ChineseCharacter',
                                                                       secondary='character_list_mapping', viewonly=True)
     pinned_character_lists: so.Mapped[List['PinnedCharacterList']] = so.relationship('PinnedCharacterList',
@@ -390,7 +393,8 @@ class PinnedCharacterList(db.Model):
 #     Relationships
     user: so.Mapped[Optional['User']] = so.relationship('User', back_populates='pinned_character_lists')
     character_list: so.Mapped[Optional['CharacterList']] = so.relationship('CharacterList',
-                                                                           back_populates='pinned_character_lists')
+                                                                           back_populates='pinned_character_lists',
+                                                                           cascade='all, delete', passive_deletes=True)
 
 
 

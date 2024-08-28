@@ -4,8 +4,10 @@ from typing import List
 
 from flask_login import current_user
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import or_
 from sqlalchemy.orm import selectinload
 from sqlalchemy.future import select
+
 from app.models import CharacterList, ChineseCharacter, User, UserRecognitionProgress, CharacterListMapping, \
     PinnedCharacterList
 
@@ -339,3 +341,92 @@ class ListsRepository:
     #             self.db.session.add(user_recog)
     #
     #     self.db.session.commit()
+
+    # def get_searched_characters(self, query):
+    #     char_results = [
+    #         char.to_dict()
+    #         for char in Character.query.filter(
+    #             Character.character.like(f"%{query}%")
+    #         ).limit(10)
+    #     ]
+    #
+    #     if char_results == None:
+    #         char_results = []
+    #
+    #     pinyin_results = [
+    #         char.to_dict()
+    #         for char in Character.query.filter(
+    #             Character.no_tone_pinyin.like(f"%{query}%")
+    #         ).limit(10)
+    #     ]
+    #     if pinyin_results == None:
+    #         pinyin_results = []
+    #
+    #     meaning_results = [
+    #         char.to_dict()
+    #         for char in Character.query.filter(Character.meaning.like(f"%{query}%")).limit(
+    #             10
+    #         )
+    #     ]
+    #     if meaning_results == None:
+    #         meaning_results = []
+    #
+
+    def add_characters_to_list(self, list_id: int, chars: List[str]) -> dict:
+        character_list = CharacterList.query.get(list_id)
+        if not character_list:
+            raise ValueError("List not found")
+
+        result = {
+            "existing_characters": [],
+            "added_characters": [],
+            "not_found_characters": [],
+            "multiple_matches": {}
+        }
+
+        for char in chars:
+            matching_characters = ChineseCharacter.query.filter_by(character=char).all()
+            if not matching_characters:
+                result["not_found_characters"].append(char)
+            else:
+                if len(matching_characters) > 1:
+                    result["multiple_matches"][char] = [
+                        {"id": c.id, "character": c.character, "pinyin": c.pinyin, "meaning": c.meaning} for c in
+                        matching_characters]
+                else:
+                    character = matching_characters[0]
+                    existing_mapping = CharacterListMapping.query.filter_by(character_list_id=list_id,
+                                                                            character_id=character.id).first()
+                    if existing_mapping:
+                        result["existing_characters"].append({"id": character.id, "character": character.character,
+                                                              "pinyin": character.pinyin, "meaning": character.meaning})
+                    else:
+                        character_list_mapping = CharacterListMapping(character_list_id=list_id,
+                                                                      character_id=character.id)
+                        self.db.session.add(character_list_mapping)
+                        result["added_characters"].append(
+                            {"id": character.id, "character": character.character, "pinyin": character.pinyin,
+                             "meaning": character.meaning})
+
+        self.db.session.commit()
+        return result
+
+    def add_chars_by_ids(self, list_id: int, char_ids: List[int]):
+        for char_id in char_ids:
+            existing_mapping = CharacterListMapping.query.filter_by(
+                character_list_id=list_id,
+                character_id=char_id).first()
+            if not existing_mapping:
+                self.db.session.add(
+                    CharacterListMapping(character_list_id=list_id, character_id=char_id)
+                )
+        self.db.session.commit()
+
+    def remove_chars(self, list_id: int, char_ids: List[int]):
+        for char_id in char_ids:
+            character_list_mapping = CharacterListMapping.query.filter_by(
+                character_list_id=list_id,
+                character_id=char_id).first()
+            if character_list_mapping:
+                self.db.session.delete(character_list_mapping)
+        self.db.session.commit()

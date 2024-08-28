@@ -1,0 +1,49 @@
+<div id="base-modal-container">
+    <div v-if="isShowReport" class="bottom-sheet-container">
+        <div class="modal-sheet">
+            <div>
+                <div v-if="reportData.multipleMatches !== 0">
+                    Multiple Matches:
+                    [[Object.keys(reportData.multipleMatches)]]
+                    <div v-for="key in Object.keys(reportData.multipleMatches)">
+                        <span>[[key]]</span>
+                        <div
+                                v-for="detail in reportData.multipleMatches[key]"
+                                :class="{ selected: isSelected(detail) }"
+                                style="margin: 3px;padding: 5px;border-radius: 3px;background: #cccccc"
+                                @click="()=> selectMatch(detail)"
+                        >
+                            <span>Pinyin: [[detail.pinyin]]</span><br>
+                            <span>Meaning: [[detail.meaning]]</span><br>
+                        </div>
+                    </div>
+
+                </div>
+                <div>
+                    Added Chars:
+                    <span v-if="reportData.addedChars.length !== 0"
+                          v-for="char in reportData.addedChars">[[char]]</span>
+                    <span v-else>0</span>
+                </div>
+                <div>
+                    Existing Chars:
+                    <span v-if="reportData.existingChars.length !== 0"
+                          v-for="char in reportData.existingChars">[[char]]</span>
+                    <span v-else>0</span>
+                </div>
+
+                <div>
+                    Not Found Chars:
+                    <span v-if="reportData.notFoundChars.length !== 0"
+                          v-for="char in reportData.notFoundChars">[[char + ' ']]</span>
+                    <span v-else>0</span>
+                </div>
+{#                <p style="color: indianred" v-if="errorMsg">[[errorMsg]]</p>#}
+            </div>
+
+            <div class="con-btns">
+                <button @click="confirmAddition">Mark Done</button>
+            </div>
+        </div>
+    </div>
+</div>

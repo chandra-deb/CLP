@@ -96,3 +96,12 @@ class ListsService:
 
     def update_memory_strength(self, updated_char_details: list[{}]) -> None:
         self.repository.update_memory_strength(updated_char_details)
+
+    def add_chars_by_ids(self, list_id: int, char_ids: List[int]):
+        self.repository.add_chars_by_ids(list_id, char_ids)
+
+    def add_chars_to_list(self, list_id: int, chars: List[str]) -> dict:
+        return self.repository.add_characters_to_list(list_id=list_id, chars=chars)
+
+    def remove_chars(self, list_id: int, char_ids: List[int]):
+        self.repository.remove_chars(list_id, char_ids)
