@@ -9,3 +9,7 @@ app/auth/routes/__pycache__
 
 
 .idea/
+
+DictionaryDD/wow.db
+
+DictionaryDD/characters.db
