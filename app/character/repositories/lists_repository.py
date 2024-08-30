@@ -4,6 +4,7 @@ from typing import List
 
 from flask_login import current_user
 from flask_sqlalchemy import SQLAlchemy
+from fsrs import FSRS, Card, Rating
 from sqlalchemy import or_
 from sqlalchemy.orm import selectinload
 from sqlalchemy.future import select
@@ -238,6 +239,37 @@ class ListsRepository:
         else:
             return 0
 
+    def update_recog_prog_on_char(self, resps):
+        srs = FSRS()
+        for resp in resps:
+            char_id = resp['char_id']
+            rating: int = resp['rating']
+            rating_name = None
+            if rating == 1:
+                rating_name = Rating.Again
+            elif rating == 2:
+                rating_name = Rating.Hard
+            elif rating == 3:
+                rating_name = Rating.Good
+            elif rating == 4:
+                rating_name = Rating.Easy
+
+            try:
+                urp = self.db.session.scalar(select(UserRecognitionProgress)
+                                             .filter_by(character_id=char_id).filter_by(user_id=current_user.id))
+            except AttributeError:
+                urp = None
+            if urp:
+                card = Card.from_dict(urp.to_dict_for_card())
+                updated_card, review_log = srs.review_card(card=card, rating=rating_name)
+                urp.update_recog_prog(card=updated_card)
+            else:
+                card = Card()
+                new_urp = UserRecognitionProgress.create_from_card(char_id=char_id, card=card)
+                self.db.session.add(new_urp)
+
+        self.db.session.commit()
+
     def update_memory_strength(self, updated_char_details: list[{}]) -> None:
         for updated_char in updated_char_details:
             character_id = updated_char['character_id']
@@ -295,52 +327,6 @@ class ListsRepository:
                 self.db.session.add(user_recog)
 
         self.db.session.commit()
-
-    # def update_memory_strength(self, updated_char_details: list[{}]) -> None:
-    #     for updated_char in updated_char_details:
-    #         character_id = updated_char['character_id']
-    #         is_correct = updated_char['is_correct']
-    #         try:
-    #             urp = self.db.session.scalar(select(UserRecognitionProgress)
-    #                                          .filter_by(character_id=character_id).filter_by(
-    #                 user_id=current_user.id))
-    #         except AttributeError:
-    #             urp = None
-    #         if urp:
-    #             now = datetime.now()
-    #             latest_memory_strength = self.calculate_memory_strength(urp)
-    #             if is_correct:
-    #                 latest_memory_strength += 0.1
-    #                 if urp.interval < 3:  # Initial phase (0-10 days)
-    #                     urp.interval = min(urp.interval * 2, 3)  # cap at 3 days
-    #                 elif urp.interval < 14:  # Short-term consolidation (10-30 days)
-    #                     urp.interval = min(urp.interval * 2, 14)  # cap at 14 days
-    #                 elif urp.interval < 30:  # Long-term retention (30-90 days)
-    #                     urp.interval = min(urp.interval * 2, 30)  # cap at 30 days
-    #                 else:  # Refresher phase (90+ days)
-    #                     urp.interval = min(urp.interval * 2, 60)  # cap at 60 days
-    #             else:
-    #                 latest_memory_strength -= 0.1
-    #                 urp.interval = 1  # reset the interval to 1 day
-    #                 urp.next_practice = now + timedelta(days=1)  # update next practice date
-    #             urp.last_practice = now
-    #             urp.memory_strength = latest_memory_strength
-    #             urp.next_practice = urp.last_practice + timedelta(days=urp.interval)
-    #         else:
-    #             memory_strength = 0.0
-    #             next_practice = datetime.now() + timedelta(days=1)
-    #             if is_correct:
-    #                 memory_strength = 0.5
-    #                 next_practice = datetime.now() + timedelta(days=3)
-    #
-    #             user_recog = UserRecognitionProgress(user_id=current_user.id, character_id=character_id,
-    #                                                  memory_strength=memory_strength,
-    #                                                  status='learning', last_practice=datetime.now(),
-    #                                                  next_practice=next_practice,
-    #                                                  interval=1)
-    #             self.db.session.add(user_recog)
-    #
-    #     self.db.session.commit()
 
     # def get_searched_characters(self, query):
     #     char_results = [
