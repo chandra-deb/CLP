@@ -3,10 +3,11 @@ from datetime import datetime, timedelta
 from typing import Optional, List
 import sqlalchemy as sa
 import sqlalchemy.orm as so
+from fsrs import Card, State
 from sqlalchemy import DateTime, UniqueConstraint
 from sqlalchemy.orm import remote, foreign
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import UserMixin
+from flask_login import UserMixin, current_user
 
 from app import db, login
 
@@ -80,7 +81,6 @@ class ChineseCharacter(db.Model):
         }
 
 
-
 class UserRecognitionProgress(db.Model):
     __tablename__ = 'user_recognition_progress'
     __table_args__ = (UniqueConstraint('user_id', 'character_id', name='unique_user_recognition'),)
@@ -88,42 +88,74 @@ class UserRecognitionProgress(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'))
     character_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('chinese_character.id'))
-    status: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, unique=False, nullable=False,
-                                              default='never_studied')
-    #To Implement SRS
-    
+    # status: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, unique=False, nullable=False,
+    #                                           default='never_studied')
+    # To Implement SRS
+    due: so.Mapped[datetime] = so.mapped_column()
+    stability: so.Mapped[float] = so.mapped_column(default=0.0)
+    difficulty: so.Mapped[float] = so.mapped_column(default=0.0)
+    elapsed_days: so.Mapped[int] = so.mapped_column(default=0)
+    scheduled_days: so.Mapped[int] = so.mapped_column(default=0)
+    reps: so.Mapped[int] = so.mapped_column(default=0)
+    lapses: so.Mapped[int] = so.mapped_column(default=0)
+    state: so.Mapped[int] = so.mapped_column(default=0)
+    last_review: so.Mapped[datetime] = so.mapped_column()
+
     # End
-    memory_strength: so.Mapped[float] = so.mapped_column(default=0.0)
-    last_practice: so.Mapped[datetime] = so.mapped_column(default=datetime.now)
-    next_practice: so.Mapped[datetime] = so.mapped_column(default=datetime.now)
-    interval: so.Mapped[int] = so.mapped_column(default=1)
 
     # Relationships
     user: so.Mapped['User'] = so.relationship('User', back_populates='recognition_progress')
     character: so.Mapped['ChineseCharacter'] = so.relationship('ChineseCharacter')
 
-    def calculate_memory_strength(self) -> float:
-        now = datetime.now()
-        time_since_last_practice = (now - self.last_practice).days
-        new_memory_strength = self.memory_strength
-        # print(f'Prev Strength of {self.character.character} is {new_memory_strength}')
+    @classmethod
+    def create_from_card(cls, char_id: int, card: Card):
+        return UserRecognitionProgress(
+            user_id=current_user.id,
+            character_id=char_id,
+            due=card.due,
+            stability=card.stability,
+            difficulty=card.difficulty,
+            elapsed_days=card.elapsed_days,
+            scheduled_days=card.scheduled_days,
+            reps=card.reps,
+            lapses=card.lapses,
+            state=card.state,
+            last_review=card.last_review,
+        )
 
-        # Decay Theory: memory strength decays over time
-        decay_rate = 0.05  # adjust this value to control the decay rate
-        # print('just print ',new_memory_strength * math.exp(-decay_rate * time_since_last_practice))
-        new_memory_strength *= math.exp(-decay_rate * time_since_last_practice)
-        # print('memory strength after decay: ', new_memory_strength)
+    def to_dict_for_card(self, ):
+        due = self.due
+        stability = self.stability
+        difficulty = self.difficulty
+        elapsed_days = self.elapsed_days
+        scheduled_days = self.scheduled_days
+        reps = self.reps
+        lapses = self.lapses
+        state = State(int(self.state))
+        last_review = self.last_review,
 
-        # Forgetting Curve: rapid decline in memory retention initially, then levels off
-        forgetting_curve_rate = 0.2  # adjust this value to control the forgetting curve rate
-        new_memory_strength *= math.pow(1 - forgetting_curve_rate, time_since_last_practice)
+        return {
+            'due': due,
+            'stability': stability,
+            'difficulty': difficulty,
+            'elapsed_days': elapsed_days,
+            'scheduled_days': scheduled_days,
+            'reps': reps,
+            'lapses': lapses,
+            'state': state,
+            'last_review': last_review,
+        }
 
-        new_memory_strength = max(0, min(1, new_memory_strength))
-
-        # self.memory_strength = new_memory_strength
-        # print(f'Now Strength of {self.character.character} is {self.memory_strength}')
-        return new_memory_strength
-
+    def update_recog_prog(self, card: Card):
+        self.due = card.due
+        self.stability = card.stability
+        self.difficulty = card.difficulty
+        self.elapsed_days = card.elapsed_days
+        self.scheduled_days = card.scheduled_days
+        self.reps = card.reps
+        self.lapses = card.lapses
+        self.state = card.state.value,
+        self.last_review = card.last_review,
 
 
 class UserPinyinProgress(db.Model):
@@ -328,12 +360,11 @@ class PinnedCharacterList(db.Model):
     character_list_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('character_list.id'))
     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'))
 
-#     Relationships
+    #     Relationships
     user: so.Mapped[Optional['User']] = so.relationship('User', back_populates='pinned_character_lists')
     character_list: so.Mapped[Optional['CharacterList']] = so.relationship('CharacterList',
                                                                            back_populates='pinned_character_lists',
                                                                            cascade='all, delete', passive_deletes=True)
-
 
 
 class CharacterListMapping(db.Model):
