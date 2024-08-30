@@ -80,36 +80,6 @@ class ChineseCharacter(db.Model):
         }
 
 
-# class UserCharacterProgression(db.Model):
-#     __tablename__ = 'user_progression'
-#     id: so.Mapped[int] = so.mapped_column(primary_key=True)
-#     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'))
-#     character_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('chinese_character.id'))
-#
-#     prog_status_in_pinyin = so.mapped_column(sa.String(64), index=True, unique=True, nullable=False)
-#     prog_status_in_meaning = so.mapped_column(sa.String(64), index=True, unique=True, nullable=False)
-#     prog_status_in_recognition = so.mapped_column(sa.String(64), index=True, unique=True, nullable=False)
-#     status_in_writing = so.mapped_column(sa.String(64), index=True, unique=True, nullable=False)
-#
-
-# ----------Replace BY -----------#
-# class UserCharacterStatus(db.Model):
-#     __tablename__ = 'user_character_status'
-#
-#     id: so.Mapped[int] = so.mapped_column(primary_key=True)
-#     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'))
-#     character_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('chinese_character.id'))
-#     status: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, unique=True, nullable=False)
-#
-#     # Relationships
-#     user: so.Mapped['User'] = so.relationship('User', back_populates='character_statuses')
-#     character: so.Mapped['ChineseCharacter'] = so.relationship('ChineseCharacter')
-#
-#     def __repr__(self):
-#         return f'<UserCharacterStatus {self.status}>'
-
-
-# ---------------THESE------------------#
 
 class UserRecognitionProgress(db.Model):
     __tablename__ = 'user_recognition_progress'
@@ -120,6 +90,9 @@ class UserRecognitionProgress(db.Model):
     character_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('chinese_character.id'))
     status: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, unique=False, nullable=False,
                                               default='never_studied')
+    #To Implement SRS
+    
+    # End
     memory_strength: so.Mapped[float] = so.mapped_column(default=0.0)
     last_practice: so.Mapped[datetime] = so.mapped_column(default=datetime.now)
     next_practice: so.Mapped[datetime] = so.mapped_column(default=datetime.now)
@@ -151,41 +124,6 @@ class UserRecognitionProgress(db.Model):
         # print(f'Now Strength of {self.character.character} is {self.memory_strength}')
         return new_memory_strength
 
-    # def update_memory_strength(self, correct: bool) -> None:
-    #     now = datetime.now()
-    #     latest_memory_strength = self.calculate_memory_strength()
-    #
-    #     if correct:
-    #         if latest_memory_strength < 0.5:
-    #             latest_memory_strength = 1.0
-    #         else:
-    #             latest_memory_strength += 0.1
-    #         self.last_practice = now
-    #     else:
-    #         if latest_memory_strength > 0.5:
-    #             latest_memory_strength -= 0.1
-    #         else:
-    #             latest_memory_strength = 0.0
-    #         self.last_practice = now
-    #
-    #     # Update the memory strength attribute
-    #     self.memory_strength = latest_memory_strength
-    #
-    #     # Calculate the next practice date based on the memory strength
-    #     if latest_memory_strength < 1.0:
-    #         self.interval = 1
-    #     elif latest_memory_strength < 2.0:
-    #         self.interval = 3
-    #     elif latest_memory_strength < 3.0:
-    #         self.interval = 7
-    #     elif latest_memory_strength < 4.0:
-    #         self.interval = 14
-    #     else:
-    #         self.interval = 30
-    #
-    #     self.next_practice = self.last_practice + timedelta(days=self.interval)
-    #
-    #     db.session.commit()
 
 
 class UserPinyinProgress(db.Model):
