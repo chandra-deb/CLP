@@ -57,10 +57,10 @@ class ChineseCharacter(db.Model):
     __tablename__ = 'chinese_character'
 
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
-    character: so.Mapped[str] = so.mapped_column(sa.String(8), index=True, unique=False, nullable=False)
-    pinyin: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, nullable=False)
-
-    meaning: so.Mapped[str] = so.mapped_column(sa.String(256), index=True, nullable=True)
+    simplified: so.Mapped[str] = so.mapped_column(sa.String(8), index=True, nullable=False)
+    traditional: so.Mapped[str] = so.mapped_column(sa.String(8), index=True, nullable=False)
+    pinyin: so.Mapped[str] = so.mapped_column(sa.String(32), index=True, nullable=False)
+    definition: so.Mapped[str] = so.mapped_column(sa.String(512), index=True, nullable=True)
 
     # Relationships
     character_mappings: so.Mapped[List['CharacterListMapping']] = so.relationship('CharacterListMapping',
@@ -70,7 +70,7 @@ class ChineseCharacter(db.Model):
                                                                                        lazy='joined')
 
     def __repr__(self):
-        return f'<ChineseCharacter {self.character}>'
+        return f'<ChineseCharacter {self.simplified.encode('utf-8')}>'
 
     def to_json(self):
         return {
