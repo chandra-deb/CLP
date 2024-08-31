@@ -3,11 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <title>{{ title }}</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script type="module" src="{{ url_for('.static', filename='js/selectStudyType.js') }}"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <style>
+{#      Study SElection#}
+.study-mode-selector {
+  font-family: Arial, sans-serif;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.time-selector {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.time-selector button {
+  margin: 0 5px;
+  padding: 5px 10px;
+  border: 1px solid #ccc;
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+
+.time-selector button.active {
+  background-color: #007bff;
+  color: white;
+}
+
+.study-modes, .custom-modes {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+}
+
+.mode {
+  {#width: 45%;#}
+  padding: 15px;
+  margin: 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.mode:hover {
+  background-color: #f0f0f0;
+}
+
+.icon {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.footer {
+  text-align: center;
+  margin-top: 20px;
+  color: #666;
+}
+
+.custom-modes-container {
+  position: relative;
+}
+
+.back-button {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  padding: 5px 10px;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  cursor: pointer;
+}
+
+.custom-modes {
+  display: flex;
+  overflow-x: auto;
+  padding: 10px 0;
+}
+
+.custom-modes .mode {
+  flex: 0 0 auto;
+  width: 200px;
+  margin-right: 15px;
+}
+{#End#}
+                .modal-sheet .con-btns {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .bottom-sheet-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5); /* Add a dark background to block clicks */
+            z-index: 1000; /* Make sure the modal sheet is on top of everything */
+            overflow-y: auto; /* Add this to make the modal sheet cover the whole page */
+            overflow-x: hidden; /* Add this to prevent horizontal scrolling */
+            display: flex;
+            justify-content: center;
+        }
+
+        .modal-sheet {
+            /* Make the modal sheet overlap the whole window */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+
+        }
+
+        .modal-sheet > div {
+            /* Style the inner content of the modal sheet */
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+    </style>
 </head>
 <body>
+<h1>"{{ url_for('.static', filename='js/selectStudyType.js')}}</h1>
+<div id="app">
+    {% include 'modals/select_study_type.html' %}
     <a href="{{ url_for('character.lists') }}">Lists</a>
-    <h1>Dashboard</h1>
-    <h2>Mastered Characters Count: {{ mastered_chars_count }}</h2>
-    <h2>Vocabulary Size: {{ vocabulary_count }}</h2>
+    <button @click="isShowSelection=!isShowSelection">Study</button>
+</div>
+<h1>Dashboard</h1>
+<h2>Mastered Characters Count: {{ mastered_chars_count }}</h2>
+<h2>Vocabulary Size: {{ vocabulary_count }}</h2>
 </body>
 </html>
