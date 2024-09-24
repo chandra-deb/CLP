@@ -174,6 +174,7 @@ class ListsRepository:
         :param limit: The maximum number of characters to return (default: 10)
         :return: A list of never studied ChineseCharacter objects
         """
+
         query = (
             self.db.session.query(ChineseCharacter)
             .join(CharacterListMapping, ChineseCharacter.id == CharacterListMapping.character_id)
@@ -182,10 +183,11 @@ class ListsRepository:
             .filter(
                 CharacterList.id == list_id,
                 (UserRecognitionProgress.user_id == user_id) | (UserRecognitionProgress.user_id == None),
-                (UserRecognitionProgress.status == "never_studied") | (UserRecognitionProgress.status == None),
+                # (UserRecognitionProgress.state == 1),
             )
             .order_by(ChineseCharacter.id)  # Add an order_by clause for consistent results
         )
+        print('IIIIIIIIIIIIIIIIIIIIIIII')
         if limit is not None:
             query = query.limit(limit)
         unstudied_chars = query.all()
@@ -213,31 +215,6 @@ class ListsRepository:
         characters_with_memory_strength: List[UserRecognitionProgress] = query.all()
 
         return characters_with_memory_strength
-
-    def calculate_memory_strength(self, urp: UserRecognitionProgress) -> float:
-        if urp:
-            now = datetime.now()
-            time_since_last_practice = (now - urp.last_practice).days
-            new_memory_strength = urp.memory_strength
-            # print(f'Prev Strength of {self.character.character} is {new_memory_strength}')
-
-            # Decay Theory: memory strength decays over time
-            decay_rate = 0.05  # adjust this value to control the decay rate
-            # print('just print ',new_memory_strength * math.exp(-decay_rate * time_since_last_practice))
-            new_memory_strength *= math.exp(-decay_rate * time_since_last_practice)
-            # print('memory strength after decay: ', new_memory_strength)
-
-            # Forgetting Curve: rapid decline in memory retention initially, then levels off
-            forgetting_curve_rate = 0.2  # adjust this value to control the forgetting curve rate
-            new_memory_strength *= math.pow(1 - forgetting_curve_rate, time_since_last_practice)
-
-            new_memory_strength = max(0, min(1, new_memory_strength))
-
-            # self.memory_strength = new_memory_strength
-            # print(f'Now Strength of {self.character.character} is {self.memory_strength}')
-            return new_memory_strength
-        else:
-            return 0
 
     def update_recog_prog_on_char(self, resps):
         srs = FSRS()
@@ -267,64 +244,6 @@ class ListsRepository:
                 card = Card()
                 new_urp = UserRecognitionProgress.create_from_card(char_id=char_id, card=card)
                 self.db.session.add(new_urp)
-
-        self.db.session.commit()
-
-    def update_memory_strength(self, updated_char_details: list[{}]) -> None:
-        for updated_char in updated_char_details:
-            character_id = updated_char['character_id']
-            is_correct = updated_char['is_correct']
-            print(is_correct)
-            try:
-                urp = self.db.session.scalar(select(UserRecognitionProgress)
-                                             .filter_by(character_id=character_id).filter_by(user_id=current_user.id))
-            except AttributeError:
-                urp = None
-            if urp:
-                now = datetime.now()
-                latest_memory_strength = self.calculate_memory_strength(urp)
-                if is_correct:
-                    if latest_memory_strength < 0.5:
-                        latest_memory_strength = 1.0
-                    else:
-                        latest_memory_strength += 0.1
-                    urp.last_practice = now
-                else:
-                    if latest_memory_strength > 0.5:
-                        latest_memory_strength -= 0.1
-                    else:
-                        latest_memory_strength = 0.0
-                    urp.last_practice = now
-
-                # Update the memory strength attribute
-                urp.memory_strength = latest_memory_strength
-
-                # Calculate the next practice date based on the memory strength
-                if latest_memory_strength < 1.0:
-                    urp.interval = 1
-                elif latest_memory_strength < 2.0:
-                    urp.interval = 3
-                elif latest_memory_strength < 3.0:
-                    urp.interval = 7
-                elif latest_memory_strength < 4.0:
-                    urp.interval = 14
-                else:
-                    urp.interval = 30
-
-                urp.next_practice = urp.last_practice + timedelta(days=urp.interval)
-            else:
-                memory_strength = 0.0
-                next_practice = datetime.now() + timedelta(days=1)
-                if is_correct:
-                    memory_strength = 1.0
-                    next_practice = datetime.now() + timedelta(days=3)
-
-                user_recog = UserRecognitionProgress(user_id=current_user.id, character_id=character_id,
-                                                     memory_strength=memory_strength,
-                                                     status='learning', last_practice=datetime.now(),
-                                                     next_practice=next_practice,
-                                                     interval=7)
-                self.db.session.add(user_recog)
 
         self.db.session.commit()
 
@@ -371,28 +290,30 @@ class ListsRepository:
         }
 
         for char in chars:
-            matching_characters = ChineseCharacter.query.filter_by(character=char).all()
+            matching_characters = ChineseCharacter.query.filter_by(simplified=char).all()
             if not matching_characters:
                 result["not_found_characters"].append(char)
             else:
                 if len(matching_characters) > 1:
                     result["multiple_matches"][char] = [
-                        {"id": c.id, "character": c.character, "pinyin": c.pinyin, "meaning": c.meaning} for c in
+                        {"id": c.id, "character": c.simplified, "pinyin": c.pinyin, "meaning": c.definition} for c in
                         matching_characters]
                 else:
                     character = matching_characters[0]
                     existing_mapping = CharacterListMapping.query.filter_by(character_list_id=list_id,
                                                                             character_id=character.id).first()
                     if existing_mapping:
-                        result["existing_characters"].append({"id": character.id, "character": character.character,
-                                                              "pinyin": character.pinyin, "meaning": character.meaning})
+                        result["existing_characters"].append({"id": character.id,
+                                                              "character": character.simplified,
+                                                              "pinyin": character.pinyin,
+                                                              "meaning": character.definition})
                     else:
                         character_list_mapping = CharacterListMapping(character_list_id=list_id,
                                                                       character_id=character.id)
                         self.db.session.add(character_list_mapping)
                         result["added_characters"].append(
-                            {"id": character.id, "character": character.character, "pinyin": character.pinyin,
-                             "meaning": character.meaning})
+                            {"id": character.id, "character": character.simplified, "pinyin": character.pinyin,
+                             "meaning": character.definition})
 
         self.db.session.commit()
         return result

@@ -1,10 +1,55 @@
 <div id="base-modal-container">
     <div v-if="isShowSelection" class="bottom-sheet-container">
         <div class="modal-sheet">
-             <div class="study-mode-selector">
+            {#            <div class="study-mode-selector">#}
+            {#                <div class="time-selector">#}
+            {#                    <button @click="selectType('Minutes')" :class="{ active: selectedType === 'Minutes' }">Minutes#}
+            {#                    </button>#}
+            {#                    <button @click="selectType('Words')" :class="{ active: selectedType === 'Words' }">Words</button>#}
+            {#                    <div class="time-options">#}
+            {#                        <button v-for="option in currentOptions" :key="option" @click="selectedValue = option"#}
+            {#                                :class="{ active: selectedValue === option }">#}
+            {#                            [[ option ]]#}
+            {#                        </button>#}
+            {#                    </div>#}
+            {#                </div>#}
+            {##}
+            {#                <div v-if="!showCustomModes" class="study-modes">#}
+            {#                    <div class="mode" @click="selectMode('Everyday')">#}
+            {#                        <div class="icon">🌱</div>#}
+            {#                        <h3>Everyday</h3>#}
+            {#                        <p>Jump into a study session optimized for long-term growth.</p>#}
+            {#                    </div>#}
+            {#                    <div class="mode" @click="selectMode('Custom')">#}
+            {#                        <div class="icon">⚙️</div>#}
+            {#                        <h3>Custom</h3>#}
+            {#                        <p>Explore a variety of custom study modes.</p>#}
+            {#                    </div>#}
+            {#                </div>#}
+            {##}
+            {#                <div v-if="showCustomModes" class="custom-modes-container">#}
+            {#                    <button class="back-button" @click="showCustomModes = false">← Back</button>#}
+            {#                    <div class="custom-modes">#}
+            {#                        <div class="mode" v-for="mode in customModes" :key="mode.name"#}
+            {#                             @click="selectCustomMode(mode.name)">#}
+            {#                            <div class="icon">[[ mode.icon ]]</div>#}
+            {#                            <h3>[[ mode.name ]]</h3>#}
+            {#                            <p>[[ mode.description ]]</p>#}
+            {#                        </div>#}
+            {#                    </div>#}
+            {#                </div>#}
+            {##}
+            {#                <p class="footer">Choose study limits and mode, or change your Settings.</p>#}
+            {#            </div>#}
+
+            {#            Animation Test#}
+              <div class="study-mode-selector">
     <div class="time-selector">
-      <button @click="selectType('Minutes')" :class="{ active: selectedType === 'Minutes' }">Minutes</button>
-      <button @click="selectType('Words')" :class="{ active: selectedType === 'Words' }">Words</button>
+      <div class="type-buttons">
+        <button @click="selectType('Minutes')" :class="{ active: selectedType === 'Minutes' }">Minutes</button>
+        <button @click="selectType('Words')" :class="{ active: selectedType === 'Words' }">Words</button>
+      </div>
+      <div class="selected-type">Selected: {{ selectedType }}</div>
       <div class="time-options">
         <button v-for="option in currentOptions" :key="option" @click="selectedValue = option" :class="{ active: selectedValue === option }">
           [[ option ]]
@@ -12,32 +57,37 @@
       </div>
     </div>
 
-    <div v-if="!showCustomModes" class="study-modes">
-      <div class="mode" @click="selectMode('Everyday')">
-        <div class="icon">🌱</div>
-        <h3>Everyday</h3>
-        <p>Jump into a study session optimized for long-term growth.</p>
-      </div>
-      <div class="mode" @click="selectMode('Custom')">
-        <div class="icon">⚙️</div>
-        <h3>Custom</h3>
-        <p>Explore a variety of custom study modes.</p>
+    <div class="fade">
+      <div v-if="!showCustomModes" class="study-modes">
+        <div class="mode" @click="selectMode('Everyday')">
+          <div class="icon">🌱</div>
+          <a href="{{ url_for('account.study_dues') }}">Everyday</a>
+          <p>Jump into a study session optimized for long-term growth.</p>
+        </div>
+        <div class="mode" @click="selectMode('Custom')">
+          <div class="icon">⚙️</div>
+          <h3>Custom</h3>
+          <p>Explore a variety of custom study modes.</p>
+        </div>
       </div>
     </div>
 
-    <div v-if="showCustomModes" class="custom-modes-container">
-      <button class="back-button" @click="showCustomModes = false">← Back</button>
-      <div class="custom-modes">
-        <div class="mode" v-for="mode in customModes" :key="mode.name" @click="selectCustomMode(mode.name)">
-          <div class="icon">[[ mode.icon ]]</div>
-          <h3>[[ mode.name ]]</h3>
-          <p>[[ mode.description ]]</p>
+    <div class="slide-fade">
+      <div v-if="showCustomModes" class="custom-modes-container">
+        <button class="back-button" @click="showCustomModes = false">← Back</button>
+        <div class="custom-modes">
+          <div class="mode" v-for="mode in customModes" :key="mode.name" @click="selectCustomMode(mode.name)">
+            <div class="icon">[[ mode.icon ]]</div>
+            <h3>[[ mode.name ]]</h3>
+            <p>[[ mode.description ]]</p>
+          </div>
         </div>
       </div>
     </div>
 
     <p class="footer">Choose study limits and mode, or change your Settings.</p>
   </div>
+            {#            End#}
 
         </div>
     </div>

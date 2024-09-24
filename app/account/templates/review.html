@@ -1,0 +1,779 @@
+{#<!DOCTYPE html>#}
+{#<html lang="en">#}
+{#<head>#}
+{#    <meta charset="UTF-8">#}
+{#    <meta name="viewport" content="width=device-width, initial-scale=1.0">#}
+{#    <title>Character Review</title>#}
+{#    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>#}
+{#    <style>#}
+{#    body {#}
+{#        font-family: Arial, sans-serif;#}
+{#        background-color: #f0f0f0;#}
+{#        margin: 0;#}
+{#        padding: 0;#}
+{#        display: flex;#}
+{#        justify-content: center;#}
+{#        align-items: center;#}
+{#        height: 100vh;#}
+{#    }#}
+{##}
+{#    #app {#}
+{#        width: 100%;#}
+{#        max-width: 600px;#}
+{#        background-color: white;#}
+{#        border-radius: 8px;#}
+{#        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);#}
+{#        padding: 20px;#}
+{#    }#}
+{##}
+{#    .review-container {#}
+{#        text-align: center;#}
+{#    }#}
+{##}
+{#    .progress-bar {#}
+{#        background-color: #e0e0e0;#}
+{#        height: 4px;#}
+{#        width: 100%;#}
+{#        margin-bottom: 20px;#}
+{#    }#}
+{##}
+{#    .progress-bar span {#}
+{#        display: block;#}
+{#        background-color: #4CAF50;#}
+{#        height: 100%;#}
+{#        width: 0;#}
+{#        transition: width 0.3s ease;#}
+{#    }#}
+{##}
+{#    .character-display {#}
+{#        margin-bottom: 30px;#}
+{#    }#}
+{##}
+{#    .character-display h1 {#}
+{#        font-size: 72px;#}
+{#        color: #333;#}
+{#        margin: 0;#}
+{#    }#}
+{##}
+{#    .question p {#}
+{#        font-size: 18px;#}
+{#        color: #666;#}
+{#        margin-bottom: 20px;#}
+{#    }#}
+{##}
+{#    button {#}
+{#        background-color: #f0f0f0;#}
+{#        border: none;#}
+{#        padding: 10px 20px;#}
+{#        margin: 5px;#}
+{#        border-radius: 20px;#}
+{#        cursor: pointer;#}
+{#        font-size: 16px;#}
+{#        transition: background-color 0.3s ease;#}
+{#    }#}
+{##}
+{#    button:hover {#}
+{#        background-color: #e0e0e0;#}
+{#    }#}
+{##}
+{#    .character-details {#}
+{#        margin-top: 20px;#}
+{#    }#}
+{##}
+{#    .character-details p {#}
+{#        font-size: 18px;#}
+{#        color: #666;#}
+{#        margin: 10px 0;#}
+{#    }#}
+{##}
+{#    .rating-buttons button {#}
+{#        background-color: #4CAF50;#}
+{#        color: white;#}
+{#    }#}
+{##}
+{#    .rating-buttons button:hover {#}
+{#        background-color: #45a049;#}
+{#    }#}
+{##}
+{#    .undo-button {#}
+{#        background-color: #f44336;#}
+{#        color: white;#}
+{#        margin-top: 20px;#}
+{#    }#}
+{##}
+{#    .undo-button:hover {#}
+{#        background-color: #da190b;#}
+{#    }#}
+{##}
+{#    /* Specific button colors */#}
+{#    button[onclick*="'again'"] { background-color: #f44336; }#}
+{#    button[onclick*="'hard'"] { background-color: #FF9800; }#}
+{#    button[onclick*="'good'"] { background-color: #4CAF50; }#}
+{#    button[onclick*="'easy'"] { background-color: #2196F3; }#}
+{##}
+{#    button[onclick*="'again'"],#}
+{#    button[onclick*="'hard'"],#}
+{#    button[onclick*="'good'"],#}
+{#    button[onclick*="'easy'"] {#}
+{#        color: white;#}
+{#    }#}
+{##}
+{#    button[onclick*="'again'"]:hover { background-color: #da190b; }#}
+{#    button[onclick*="'hard'"]:hover { background-color: #e68a00; }#}
+{#    button[onclick*="'good'"]:hover { background-color: #45a049; }#}
+{#    button[onclick*="'easy'"]:hover { background-color: #0b7dda; }#}
+{#</style>#}
+{#</head>#}
+{#<body>#}
+{#    <div id="app">#}
+{#        <div class="review-container">#}
+{#            <!-- Progress indicator -->#}
+{#            <div class="progress-bar">#}
+{#                <span v-if="reviewStyle === 'time'">[[remainingTime]] seconds</span>#}
+{#                <span v-else>[[currentWordIndex + 1]] / [[totalWords]]</span>#}
+{#            </div>#}
+{##}
+{#            <!-- Character display -->#}
+{#            <div class="character-display">#}
+{#                <h1>[[currentCharacter.hanzi]]</h1>#}
+{#            </div>#}
+{##}
+{#            <!-- Pronunciation question -->#}
+{#            <div v-if="showPronunciationQuestion" class="question">#}
+{#                <p>How do you pronounce this word?</p>#}
+{#                <button @click="handleResponse('dontKnow')">I don't know</button>#}
+{#                <button @click="handleResponse('thinkKnow')">I think I know</button>#}
+{#            </div>#}
+{##}
+{#            <!-- Character details -->#}
+{#            <div v-if="showDetails" class="character-details">#}
+{#                <p>[[currentCharacter.pinyin]]</p>#}
+{#                <p>[[currentCharacter.meaning]]</p>#}
+{#                <p>[[currentCharacter.exampleSentence]]</p>#}
+{#                <button @click="markAsStudied">I'm done studying it</button>#}
+{#            </div>#}
+{##}
+{#            <!-- Rating buttons -->#}
+{#            <div v-if="showRatingButtons" class="rating-buttons">#}
+{#                <button @click="rateCharacter('again')">Again</button>#}
+{#                <button @click="rateCharacter('hard')">Hard</button>#}
+{#                <button @click="rateCharacter('good')">Good</button>#}
+{#                <button @click="rateCharacter('easy')">Easy</button>#}
+{#            </div>#}
+{##}
+{#            <!-- Undo button -->#}
+{#            <button @click="undoLastReview" class="undo-button">Undo</button>#}
+{#        </div>#}
+{#    </div>#}
+{##}
+{#    <script>#}
+{#        const { createApp, ref, computed, onMounted, watch } = Vue;#}
+{##}
+{#        const app = createApp({#}
+{#            delimiters: ['[[', ']]'],#}
+{#            data() {#}
+{#                return {#}
+{#                    reviewStyle: 'words', // or 'time'#}
+{#                    remainingTime: 600, // 10 minutes#}
+{#                    totalWords: 0,#}
+{#                    currentWordIndex: 0,#}
+{#                    currentCharacter: {},#}
+{#                    showPronunciationQuestion: true,#}
+{#                    showDetails: false,#}
+{#                    showRatingButtons: false,#}
+{#                    reviewHistory: [],#}
+{#                    characters: [] // This will store all characters to review#}
+{#                }#}
+{#            },#}
+{#            methods: {#}
+{#                async fetchReviewCharacters() {#}
+{#                    // Simulate API call#}
+{#                    this.characters = [#}
+{#                        { id: 1, hanzi: '从', pinyin: 'cóng', meaning: 'from', exampleSentence: '他从北京来。' },#}
+{#                        { id: 2, hanzi: '办法', pinyin: 'bànfǎ', meaning: 'way; method', exampleSentence: '我们需要找到一个好办法。' },#}
+{#                        { id: 3, hanzi: 'lan', pinyin: 'cpa', meaning: 'how', exampleSentence: '他从北京来。' },#}
+{#                        { id: 4, hanzi: 'ulao', pinyin: 'nanl', meaning: 'Lou', exampleSentence: '他从北京来。' },#}
+{#                        // Add more characters...#}
+{#                    ];#}
+{#                    this.totalWords = this.characters.length;#}
+{#                    this.currentCharacter = this.characters[0];#}
+{#                },#}
+{#                handleResponse(response) {#}
+{#                    if (response === 'dontKnow') {#}
+{#                        this.showDetails = true;#}
+{#                        this.showPronunciationQuestion = false;#}
+{#                    } else {#}
+{#                        this.showRatingButtons = true;#}
+{#                        this.showPronunciationQuestion = false;#}
+{#                    }#}
+{#                },#}
+{#                markAsStudied() {#}
+{#                    this.showDetails = false;#}
+{#                    this.showRatingButtons = true;#}
+{#                },#}
+{#                async rateCharacter(rating) {#}
+{#                    // Simulate API call to update character review#}
+{#                    console.log(`Character ${this.currentCharacter.id} rated as ${rating}`);#}
+{#                    this.reviewHistory.push({ ...this.currentCharacter, rating });#}
+{#                    this.moveToNextCharacter();#}
+{#                },#}
+{#                moveToNextCharacter() {#}
+{#                    this.currentWordIndex++;#}
+{#                    if (this.currentWordIndex < this.totalWords) {#}
+{#                        this.currentCharacter = this.characters[this.currentWordIndex];#}
+{#                        this.resetCharacterState();#}
+{#                    } else {#}
+{#                        this.endReviewSession();#}
+{#                    }#}
+{#                },#}
+{#                resetCharacterState() {#}
+{#                    this.showPronunciationQuestion = true;#}
+{#                    this.showDetails = false;#}
+{#                    this.showRatingButtons = false;#}
+{#                },#}
+{#                undoLastReview() {#}
+{#                    if (this.reviewHistory.length > 0) {#}
+{#                        const lastReview = this.reviewHistory.pop();#}
+{#                        this.currentCharacter = lastReview;#}
+{#                        this.currentWordIndex--;#}
+{#                        this.showRatingButtons = true;#}
+{#                        this.showPronunciationQuestion = false;#}
+{#                        this.showDetails = false;#}
+{#                    }#}
+{#                },#}
+{#                endReviewSession() {#}
+{#                    // Logic to end the session and show summary#}
+{#                    console.log('Review session ended');#}
+{#                },#}
+{#                startTimer() {#}
+{#                    const timer = setInterval(() => {#}
+{#                        this.remainingTime--;#}
+{#                        if (this.remainingTime <= 0) {#}
+{#                            clearInterval(timer);#}
+{#                            this.endReviewSession();#}
+{#                        }#}
+{#                    }, 1000);#}
+{#                }#}
+{#            },#}
+{#            mounted() {#}
+{#                this.fetchReviewCharacters();#}
+{#                if (this.reviewStyle === 'time') {#}
+{#                    this.startTimer();#}
+{#                }#}
+{#            },#}
+{#            watch: {#}
+{#                reviewStyle(newStyle) {#}
+{#                    if (newStyle === 'time') {#}
+{#                        this.startTimer();#}
+{#                    }#}
+{#                }#}
+{#            }#}
+{#        });#}
+{##}
+{#        app.mount('#app');#}
+{#    </script>#}
+{#</body>#}
+{#</html>#}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Character Review</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        #app {
+            width: 100%;
+            max-width: 600px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .review-container {
+            text-align: center;
+        }
+
+        .progress-bar {
+            background-color: #e0e0e0;
+            height: 4px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar .progress {
+            background-color: #4CAF50;
+            height: 100%;
+            width: 0;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .character-display {
+            margin-bottom: 30px;
+        }
+
+        .character-display h1 {
+            font-size: 72px;
+            color: #333;
+            margin: 0;
+        }
+
+        .question p {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background-color: #f0f0f0;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #e0e0e0;
+        }
+
+        .character-details {
+            margin-top: 20px;
+        }
+
+        .character-details p {
+            font-size: 18px;
+            color: #666;
+            margin: 10px 0;
+        }
+
+        .rating-buttons button {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .rating-buttons button:hover {
+            background-color: #45a049;
+        }
+
+        .undo-button {
+            background-color: #f44336;
+            color: white;
+            margin-top: 20px;
+        }
+
+        .undo-button:hover {
+            background-color: #da190b;
+        }
+
+        .undo-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Specific button colors */
+        .rating-buttons button:nth-child(1) {
+            background-color: #f44336;
+        }
+
+        .rating-buttons button:nth-child(2) {
+            background-color: #FF9800;
+        }
+
+        .rating-buttons button:nth-child(3) {
+            background-color: #4CAF50;
+        }
+
+        .rating-buttons button:nth-child(4) {
+            background-color: #2196F3;
+        }
+
+        .rating-buttons button:nth-child(1):hover {
+            background-color: #da190b;
+        }
+
+        .rating-buttons button:nth-child(2):hover {
+            background-color: #e68a00;
+        }
+
+        .rating-buttons button:nth-child(3):hover {
+            background-color: #45a049;
+        }
+
+        .rating-buttons button:nth-child(4):hover {
+            background-color: #0b7dda;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div class="review-container">
+        <!-- Progress indicator -->
+        <div class="progress-bar">
+            <div class="progress" :style="{ width: progressPercentage + '%' }"></div>
+        </div>
+        <div class="progress-text">
+            <span v-if="reviewStyle === 'time'">[[remainingTime]] seconds remaining</span>
+            <span v-else>[[reviewedCount]] / [[totalWords]] words reviewed</span>
+        </div>
+
+        <!-- Character display -->
+        <div class="character-display">
+            <h1>[[currentCharacter.hanzi]]</h1>
+        </div>
+
+        <!-- Pronunciation question -->
+        <div v-if="showPronunciationQuestion" class="question">
+            <p>How do you pronounce this word?</p>
+            <button @click="handleResponse('dontKnow')">I don't know</button>
+            <button @click="handleResponse('thinkKnow')">I think I know</button>
+        </div>
+
+        <!-- Character details -->
+        <div v-if="showDetails" class="character-details">
+            <p>[[currentCharacter.pinyin]]</p>
+            <p>[[currentCharacter.meaning]]</p>
+            <p>[[currentCharacter.exampleSentence]]</p>
+            <button @click="markAsStudied">I'm done studying it</button>
+        </div>
+
+        <!-- Rating buttons -->
+        <div v-if="showRatingButtons" class="rating-buttons">
+            <button @click="rateCharacter('again')">Again</button>
+            <button @click="rateCharacter('hard')">Hard</button>
+            <button @click="rateCharacter('good')">Good</button>
+            <button @click="rateCharacter('easy')">Easy</button>
+        </div>
+
+        <!-- Undo button -->
+        <button @click="undoLastReview" class="undo-button" :disabled="!canUndo">Undo</button>
+    </div>
+</div>
+
+{#    <script>#}
+{#        const { createApp, ref, computed, onMounted, watch } = Vue;#}
+{##}
+{#        const app = createApp({#}
+{#            delimiters: ['[[', ']]'],#}
+{#            data() {#}
+{#                return {#}
+{#                    reviewStyle: '', // This will be set by the API response#}
+{#                    remainingTime: 0,#}
+{#                    totalWords: 0,#}
+{#                    currentWordIndex: 0,#}
+{#                    currentCharacter: {},#}
+{#                    showPronunciationQuestion: true,#}
+{#                    showDetails: false,#}
+{#                    showRatingButtons: false,#}
+{#                    lastReviewedCharacter: null,#}
+{#                    characters: [],#}
+{#                    reviewedCount: 0,#}
+{#                    canUndo: false,#}
+{#                }#}
+{#            },#}
+{#            computed: {#}
+{#                progressPercentage() {#}
+{#                    if (this.reviewStyle === 'time') {#}
+{#                        return ((this.initialTime - this.remainingTime) / this.initialTime) * 100;#}
+{#                    } else {#}
+{#                        return (this.reviewedCount / this.totalWords) * 100;#}
+{#                    }#}
+{#                }#}
+{#            },#}
+{#            methods: {#}
+{#                async fetchReviewSession() {#}
+{#                    // Simulate API call#}
+{#                    // In a real scenario, this would be an actual API call#}
+{#                    const response = {#}
+{#                        reviewStyle: 'time', // or 'time'#}
+{#                        characters: [#}
+{#                            { id: 1, hanzi: '从', pinyin: 'cóng', meaning: 'from', exampleSentence: '他从北京来。' },#}
+{#                            { id: 2, hanzi: '办法', pinyin: 'bànfǎ', meaning: 'way; method', exampleSentence: '我们需要找到一个好办法。' },#}
+{#                            { id: 3, hanzi: 'Pew', pinyin: 'cóng', meaning: 'from', exampleSentence: '他从北京来。' },#}
+{#                            { id: 4, hanzi: 'New', pinyin: 'cóng', meaning: 'from', exampleSentence: '他从北京来。' },#}
+{#                            // Add more characters...#}
+{#                        ],#}
+{#                        totalTime: 10 // Only if reviewStyle is 'time'#}
+{#                    };#}
+{##}
+{#                    this.reviewStyle = response.reviewStyle;#}
+{#                    this.characters = response.characters;#}
+{#                    this.totalWords = response.characters.length;#}
+{#                    this.currentCharacter = response.characters[0];#}
+{##}
+{#                    if (this.reviewStyle === 'time') {#}
+{#                        this.remainingTime = response.totalTime;#}
+{#                        this.initialTime = response.totalTime;#}
+{#                        this.startTimer();#}
+{#                    }#}
+{#                },#}
+{#                handleResponse(response) {#}
+{#                    if (response === 'dontKnow') {#}
+{#                        this.showDetails = true;#}
+{#                        this.showPronunciationQuestion = false;#}
+{#                    } else {#}
+{#                        this.showRatingButtons = true;#}
+{#                        this.showPronunciationQuestion = false;#}
+{#                    }#}
+{#                },#}
+{#                markAsStudied() {#}
+{#                    this.showDetails = false;#}
+{#                    this.showRatingButtons = true;#}
+{#                },#}
+{#                async rateCharacter(rating) {#}
+{#                    // Simulate API call to update character review#}
+{#                    console.log(`Character ${this.currentCharacter.id} rated as ${rating}`);#}
+{#                    this.lastReviewedCharacter = { ...this.currentCharacter, rating };#}
+{#                    this.reviewedCount++;#}
+{#                    this.canUndo = true;#}
+{#                    this.moveToNextCharacter();#}
+{#                },#}
+{#                moveToNextCharacter() {#}
+{#                    this.currentWordIndex++;#}
+{#                    if (this.currentWordIndex < this.totalWords) {#}
+{#                        this.currentCharacter = this.characters[this.currentWordIndex];#}
+{#                        this.resetCharacterState();#}
+{#                    } else {#}
+{#                        this.endReviewSession();#}
+{#                    }#}
+{#                },#}
+{#                resetCharacterState() {#}
+{#                    this.showPronunciationQuestion = true;#}
+{#                    this.showDetails = false;#}
+{#                    this.showRatingButtons = false;#}
+{#                },#}
+{#                undoLastReview() {#}
+{#                    if (this.canUndo) {#}
+{#                        this.currentCharacter = this.lastReviewedCharacter;#}
+{#                        this.currentWordIndex--;#}
+{#                        this.reviewedCount--;#}
+{#                        this.showRatingButtons = true;#}
+{#                        this.showPronunciationQuestion = false;#}
+{#                        this.showDetails = false;#}
+{#                        this.canUndo = false;#}
+{#                        this.lastReviewedCharacter = null;#}
+{#                    }#}
+{#                },#}
+{#                endReviewSession() {#}
+{#                    // Logic to end the session and show summary#}
+{#                    console.log('Review session ended');#}
+{#                },#}
+{#                startTimer() {#}
+{#                    const timer = setInterval(() => {#}
+{#                        this.remainingTime--;#}
+{#                        if (this.remainingTime <= 0) {#}
+{#                            clearInterval(timer);#}
+{#                            this.endReviewSession();#}
+{#                        }#}
+{#                    }, 1000);#}
+{#                }#}
+{#            },#}
+{#            mounted() {#}
+{#                this.fetchReviewSession();#}
+{#            }#}
+{#        });#}
+{##}
+{#        app.mount('#app');#}
+{#    </script>#}
+
+<script>
+    const {createApp, ref, computed, onMounted, watch} = Vue;
+
+    const app = createApp({
+        delimiters: ['[[', ']]'],
+        data() {
+            return {
+                reviewStyle: '',
+                remainingTime: 0,
+                initialTime: 0,
+                totalWords: 0,
+                currentCharacter: {},
+                showPronunciationQuestion: true,
+                showDetails: false,
+                showRatingButtons: false,
+                lastReviewedCharacter: null,
+                characters: [],
+                reviewQueue: [],
+                reviewedCount: 0,
+                canUndo: false,
+            }
+        },
+        computed: {
+            progressPercentage() {
+                if (this.reviewStyle === 'time') {
+                    return ((this.initialTime - this.remainingTime) / this.initialTime) * 100;
+                } else {
+                    return (this.reviewedCount / this.totalWords) * 100;
+                }
+            }
+        },
+        methods: {
+            async fetchReviewSession() {
+                // Simulate API call
+                const response = {
+                    reviewStyle: 'words', // or 'time'
+                    characters: [
+                        {
+                            id: 1,
+                            hanzi: '从',
+                            pinyin: 'cóng',
+                            meaning: 'from',
+                            exampleSentence: '他从北京来。',
+                            interval: 1,
+                            easeFactor: 2.5
+                        },
+                        {
+                            id: 2,
+                            hanzi: '办法',
+                            pinyin: 'bànfǎ',
+                            meaning: 'way; method',
+                            exampleSentence: '我们需要找到一个好办法。',
+                            interval: 1,
+                            easeFactor: 2.5
+                        },
+                        // Add more characters...
+                    ],
+                    totalTime: 600 // Only if reviewStyle is 'time'
+                };
+
+                this.reviewStyle = response.reviewStyle;
+                this.characters = response.characters;
+                this.totalWords = response.characters.length;
+                this.reviewQueue = [...this.characters];
+                this.currentCharacter = this.getNextCharacter();
+
+                if (this.reviewStyle === 'time') {
+                    this.remainingTime = response.totalTime;
+                    this.initialTime = response.totalTime;
+                    this.startTimer();
+                }
+            },
+            getNextCharacter() {
+                if (this.reviewQueue.length === 0) {
+                    return null; // End of review session
+                }
+                return this.reviewQueue.shift();
+            },
+            handleResponse(response) {
+                if (response === 'dontKnow') {
+                    this.showDetails = true;
+                    this.showPronunciationQuestion = false;
+                } else {
+                    this.showRatingButtons = true;
+                    this.showPronunciationQuestion = false;
+                }
+            },
+            markAsStudied() {
+                this.showDetails = false;
+                this.showRatingButtons = true;
+            },
+            async rateCharacter(rating) {
+                // Update character's interval and ease factor based on the rating
+                const {interval, easeFactor} = this.updateCharacterProperties(this.currentCharacter, rating);
+
+                console.log(`Character ${this.currentCharacter.id} rated as ${rating}. New interval: ${interval}, New ease factor: ${easeFactor}`);
+
+                this.lastReviewedCharacter = {...this.currentCharacter, rating, interval, easeFactor};
+                this.reviewedCount++;
+                this.canUndo = true;
+
+                // Re-insert the character into the queue based on its new interval
+                this.reinsertCharacter(this.lastReviewedCharacter);
+
+                this.moveToNextCharacter();
+            },
+            updateCharacterProperties(character, rating) {
+                let {interval, easeFactor} = character;
+
+                if (rating === 'again') {
+                    interval = 1;
+                    easeFactor = Math.max(1.3, easeFactor - 0.2);
+                } else {
+                    if (rating === 'hard') {
+                        interval *= 1.2;
+                        easeFactor -= 0.15;
+                    } else if (rating === 'good') {
+                        interval *= easeFactor;
+                    } else if (rating === 'easy') {
+                        interval *= easeFactor * 1.3;
+                        easeFactor += 0.15;
+                    }
+                    interval = Math.round(interval);
+                    easeFactor = Math.max(1.3, easeFactor);
+                }
+
+                return {interval, easeFactor};
+            },
+            reinsertCharacter(character) {
+                const insertIndex = Math.min(this.reviewQueue.length, character.interval);
+                this.reviewQueue.splice(insertIndex, 0, character);
+            },
+            moveToNextCharacter() {
+                this.currentCharacter = this.getNextCharacter();
+                if (this.currentCharacter) {
+                    this.resetCharacterState();
+                } else {
+                    this.endReviewSession();
+                }
+            },
+            resetCharacterState() {
+                this.showPronunciationQuestion = true;
+                this.showDetails = false;
+                this.showRatingButtons = false;
+            },
+            undoLastReview() {
+                if (this.canUndo) {
+                    this.reviewQueue.unshift(this.currentCharacter);
+                    this.currentCharacter = this.lastReviewedCharacter;
+                    this.reviewedCount--;
+                    this.showRatingButtons = true;
+                    this.showPronunciationQuestion = false;
+                    this.showDetails = false;
+                    this.canUndo = false;
+                    this.lastReviewedCharacter = null;
+                }
+            },
+            endReviewSession() {
+                // Logic to end the session and show summary
+                console.log('Review session ended');
+            },
+            startTimer() {
+                const timer = setInterval(() => {
+                    this.remainingTime--;
+                    if (this.remainingTime <= 0) {
+                        clearInterval(timer);
+                        this.endReviewSession();
+                    }
+                }, 1000);
+            }
+        },
+        mounted() {
+            this.fetchReviewSession();
+        }
+    });
+
+    app.mount('#app');
+</script>
+</body>
+</html>

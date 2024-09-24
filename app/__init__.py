@@ -17,6 +17,8 @@ login = LoginManager(app)
 
 from app import models
 
+import hanzipy
+
 # Here all the bluprint gets added to the main application
 from app.auth import auth
 app.register_blueprint(auth, url_prefix='/auth')
@@ -26,6 +28,31 @@ app.register_blueprint(account)
 
 from app.character import character
 app.register_blueprint(character)
+
+
+
+# from DictionaryDD.processed.processed_chars import word_list
+# # from hanzipy.dictionary import HanziDictionary
+#
+# from app.models import ChineseCharacter
+# with app.app_context():
+#     dictionary = HanziDictionary()
+#     for word in word_list:
+#         print(word.encode('utf-8'))
+#         try:
+#             definitions = dictionary.definition_lookup(word)
+#             for definition in definitions:
+#                 simplified = definition['simplified']
+#                 traditional = definition['traditional']
+#                 pinyin = definition['pinyin']
+#                 definition = definition['definition']
+#
+#                 char = ChineseCharacter(simplified=simplified, traditional=traditional,
+#                                  pinyin=pinyin, definition=definition)
+#                 db.session.add(char)
+#         except KeyError:
+#             pass
+#     db.session.commit()
 
 
 

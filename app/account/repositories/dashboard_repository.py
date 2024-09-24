@@ -11,7 +11,8 @@ class DashboardRepository:
         self.db = db
 
     def get_chars_len_with_given_status(self, status: CharacterStatus) -> int:
-        return self.db.session.execute(
-            self.db.select(self.db.func.count()).select_from(UserRecognitionProgress)
-            .filter_by(user_id=current_user.id, status=status.value)).scalar()
+        return 0
+        # self.db.session.execute(
+        #     self.db.select(self.db.func.count()).select_from(UserRecognitionProgress)
+        #     .filter_by(user_id=current_user.id, status=status.value)).scalar()
 
